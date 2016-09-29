@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TreeView?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="850.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.MainWindowController">
+   <children>
+      <MenuBar prefHeight="30.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <menus>
+          <Menu mnemonicParsing="false" text="File">
+            <items>
+              <MenuItem mnemonicParsing="false" text="Close" />
+            </items>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Edit">
+            <items>
+              <MenuItem mnemonicParsing="false" text="Delete" />
+            </items>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Help">
+            <items>
+              <MenuItem mnemonicParsing="false" text="About" />
+            </items>
+          </Menu>
+        </menus>
+      </MenuBar>
+      <TabPane layoutY="29.0" prefHeight="140.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="30.0">
+        <tabs>
+          <Tab text="Variables">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <ComboBox layoutX="222.0" layoutY="43.0" prefHeight="26.0" prefWidth="113.0" />
+                        <Label layoutX="222.0" layoutY="23.0" text="Domain" />
+                        <CheckBox layoutX="223.0" layoutY="76.0" mnemonicParsing="false" text="Non-negative" />
+                        <Label layoutX="396.0" layoutY="48.0" text="Dimension" />
+                        <ComboBox layoutX="395.0" layoutY="68.0" prefHeight="26.0" prefWidth="73.0" />
+                        <Label layoutX="491.0" layoutY="-4.0" text="Upper bound" />
+                        <Label layoutX="491.0" layoutY="48.0" text="Lower bound" />
+                        <TextField layoutX="493.0" layoutY="18.0" prefHeight="26.0" prefWidth="85.0" />
+                        <TextField layoutX="493.0" layoutY="68.0" prefHeight="26.0" prefWidth="83.0" />
+                        <Button layoutX="65.0" layoutY="24.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="76.0" text="Add" />
+                        <Button layoutX="67.0" layoutY="57.0" mnemonicParsing="false" text="Remove" />
+                        <Label layoutX="395.0" layoutY="4.0" text="Letter" />
+                        <TextField layoutX="395.0" layoutY="21.0" prefHeight="26.0" prefWidth="39.0" />
+                        <Label fx:id="labelEditVariable" layoutX="223.0" layoutY="6.0" text="Editing X:" />
+                     </children>
+                  </AnchorPane>
+            </content>
+          </Tab>
+          <Tab text="Data">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <Label layoutX="280.0" layoutY="46.0" text="Size" />
+                        <TextField layoutX="280.0" layoutY="63.0" prefHeight="26.0" prefWidth="40.0" />
+                        <Button layoutX="457.0" layoutY="19.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="99.0" text="Fill data" />
+                        <Button layoutX="458.0" layoutY="62.0" mnemonicParsing="false" text="Import Data" />
+                        <Button layoutX="14.0" layoutY="11.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="119.0" text="Add new Set" />
+                        <Button layoutX="38.0" layoutY="75.0" mnemonicParsing="false" text="Remove" />
+                        <Label layoutX="374.0" layoutY="46.0" text="Letter" />
+                        <TextField layoutX="374.0" layoutY="62.0" prefHeight="26.0" prefWidth="39.0" />
+                        <Label layoutX="188.0" layoutY="46.0" text="Dimension" />
+                        <ComboBox layoutX="187.0" layoutY="63.0" prefHeight="26.0" prefWidth="73.0" />
+                        <Button layoutX="14.0" layoutY="41.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="119.0" text="Add new Array" />
+                        <Label layoutX="188.0" layoutY="16.0" text="Editing X:" />
+                     </children>
+                  </AnchorPane>
+            </content>
+          </Tab>
+            <Tab text="Model">
+              <content>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <RadioButton layoutX="23.0" layoutY="29.0" mnemonicParsing="false" text="Min" />
+                        <RadioButton layoutX="23.0" layoutY="60.0" mnemonicParsing="false" text="Max" />
+                        <TextField layoutX="129.0" layoutY="41.0" prefHeight="31.0" prefWidth="459.0" text="\\sum_{n=1}^{\infty} 2^{-n} + A_{nj2} &lt; 10" />
+                        <Label layoutX="129.0" layoutY="24.0" text="Formula" />
+                        <Button layoutX="598.0" layoutY="41.0" mnemonicParsing="false" onAction="#generateFormula" text="Generate" />
+                        <Label layoutX="129.0" layoutY="70.0" text="Ex.: CX + DY" />
+                     </children>
+                  </AnchorPane>
+              </content>
+            </Tab>
+        </tabs>
+      </TabPane>
+      <TreeView layoutY="237.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="170.0" />
+      <AnchorPane fx:id="innerAnchorPane" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="170.0">
+         <children>
+            <Canvas fx:id="canvas" height="685.0" width="700.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="100.0" AnchorPane.topAnchor="0.0" />
+         </children>
+      </AnchorPane>
+   </children>
+</AnchorPane>

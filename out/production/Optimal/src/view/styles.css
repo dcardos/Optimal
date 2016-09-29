@@ -1,0 +1,74 @@
+.root {
+    /* A bright blue for highlighting/accenting objects.  For example: selected
+     * text; selected items in menus, lists, trees, and tables; progress bars;
+     * default buttons.
+     */
+    -fx-accent: #FF9800;
+
+    /* A bright blue for the focus indicator of objects. Typically used as the
+     * first color in -fx-background-color for the "focused" pseudo-class. Also
+     * typically used with insets of -1.4 to provide a glowing effect.
+     *
+     * TODO: should this be derived from -fx-accent?
+     */
+    -fx-focus-color: #FF9800;
+}
+
+.labelHeader {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-font-style: italic;
+}
+
+.menuBar {
+    -fx-background-color: black;
+}
+
+.menu .label {
+    -fx-text-fill: white;
+}
+
+.menu-item {
+    -fx-background-color: black;
+}
+
+.menu-item:focused {
+    -fx-background-color: #FF9800;
+}
+
+/* Background color of menu items*/
+.context-menu {
+    /*-fx-skin: "com.sun.javafx.scene.control.skin.ContextMenuSkin";*/
+    -fx-background-color: black;
+}
+
+.button {
+    -fx-background-radius: 0px;
+    -fx-background-insets: 0 0 0 0;
+}
+
+.button:pressed {
+    -fx-background-color: #BF360C;
+}
+
+.headerButton {
+    -fx-text-fill: #FFFFFF;
+    -fx-background-color: #E65100;
+    -fx-border-color: black;
+    -fx-border-width: 1px;
+}
+
+.smallButton {
+    -fx-text-fill: #FFFFFF;
+    -fx-background-color: #E65100;
+}
+
+.split-pane {
+    -fx-background-color: #FFF3E0;
+    /*-fx-box-border: transparent;*/
+}
+
+.split-pane > .split-pane-divider {
+    -fx-padding: 0 0 0 0;
+    -fx-border-color: black;
+}

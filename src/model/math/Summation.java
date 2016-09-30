@@ -42,7 +42,9 @@ public class Summation implements Expression {
         if (null != mStoppingPoint) {
             latex.append("^{").append(mStoppingPoint.getLatexExpression()).append("}");
         }
-        latex.append(mExpression.getLatexExpression());
+        if (null != mExpression) {
+            latex.append(mExpression.getLatexExpression());
+        }
         return latex.toString();
     }
 }

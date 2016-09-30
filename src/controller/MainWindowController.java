@@ -13,9 +13,6 @@ import model.Formula;
 import model.MathElement;
 import model.math.*;
 import org.jfree.fx.FXGraphics2D;
-import org.scilab.forge.jlatexmath.TeXConstants;
-import org.scilab.forge.jlatexmath.TeXFormula;
-import org.scilab.forge.jlatexmath.TeXIcon;
 
 import javax.swing.*;
 import java.awt.*;
@@ -140,23 +137,17 @@ public class MainWindowController {
 //        double height = canvas.getHeight();
 //        canvas.getGraphicsContext2D().clearRect(0, 0, width, height);
 
-        Vector<MathElement> mathElements = formula.getMathElements();
-        for (MathElement mathElement : mathElements) {
-            TeXFormula teXFormula = new TeXFormula(
-                    mathElement.getExpression().getLatexExpression());
-            TeXIcon icon = teXFormula.createTeXIcon(TeXConstants.STYLE_DISPLAY, 20);
-
+        for (MathElement mathElement : formula.getMathElements()) {
             // now create an actual image of the rendered equation
-            BufferedImage image = new BufferedImage(icon.getIconWidth(),
-                    icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
+            BufferedImage image = new BufferedImage(mathElement.getWidth(),
+                    mathElement.getHeight(), BufferedImage.TYPE_INT_ARGB);
             Graphics2D gg = image.createGraphics();
             gg.setColor(Color.WHITE);
-            gg.fillRect(0, 0, icon.getIconWidth(), icon.getIconHeight());
+            gg.fillRect(0, 0, mathElement.getWidth(), mathElement.getHeight());
             JLabel jl = new JLabel();
             jl.setForeground(new Color(0, 0, 0));
-            icon.paintIcon(jl, gg, 0, 0);
+            mathElement.getIcon().paintIcon(jl, gg, 0, 0);
             // at this point the image is created, you could also save it with ImageIO
-
             this.g2.drawImage(image, mathElement.getX(), mathElement.getY(), null);
         }
     }
@@ -208,19 +199,21 @@ public class MainWindowController {
         Summation somatorio = new Summation();
         somatorio.setStartingPoint(nIgual1);
         somatorio.setStoppingPoint(infinito);
-        somatorio.setExpression(soma);
+//        somatorio.setExpression(soma);
 
         Equal expIgual1 = new Equal();
         expIgual1.setLeftExpression(somatorio);
         expIgual1.setRightExpression(um);
 
         // formula division
-        // TODO: pay attention to the width and height not set here
         Formula formula = new Formula(0, 0, false);
-        formula.addMathElement(new MathElement(0, 0, 35, 66, somatorio));
-        formula.addMathElement(new MathElement(36, 0, 20, 40, power));
-        formula.addMathElement(new MathElement(57, 0, 10, 0, new Sum()));
-        formula.addMathElement(new MathElement(68, 0, 20, 0, azao));
+        formula.addMathElement(new MathElement(somatorio));
+        formula.addMathElement(new MathElement(power));
+        formula.addMathElement(new MathElement(new Sum()));
+        formula.addMathElement(new MathElement(azao));
+
+        System.out.println(formula);
+
         return formula;
     }
 

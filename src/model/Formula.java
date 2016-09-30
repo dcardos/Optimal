@@ -7,7 +7,7 @@ import java.util.Vector;
  */
 public class Formula {
     private static final Integer defaultHeight = 66;
-    private static int counter = -1;
+    private static int counter = 0;
     private int mId;
     private int mX;
     private int mY;
@@ -73,6 +73,8 @@ public class Formula {
     }
 
     public void addMathElement(MathElement mathElement) {
+        mathElement.setX(mX + mWidth);
+        mathElement.setY(mAlignment - mathElement.getHeight()/2);
         mMathElements.add(mathElement);
         updateSize(mathElement.getWidth());
     }
@@ -81,6 +83,37 @@ public class Formula {
         MathElement mathElementRemoved = mMathElements.remove(index);
         updateSize(-mathElementRemoved.getWidth());
         return mathElementRemoved;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        stringBuilder.append("Formula:")
+                .append(System.getProperty("line.separator"));
+        stringBuilder.append("defaultHeight = " + defaultHeight)
+                .append(System.getProperty("line.separator"));
+        stringBuilder.append("counter = " + counter)
+                .append(System.getProperty("line.separator"));
+        stringBuilder.append("mId = " + mId)
+                .append(System.getProperty("line.separator"));
+        stringBuilder.append("mX = " + mX)
+                .append(System.getProperty("line.separator"));
+        stringBuilder.append("my = " + mY)
+                .append(System.getProperty("line.separator"));
+        stringBuilder.append("mWidth = " + mWidth)
+                .append(System.getProperty("line.separator"));
+        stringBuilder.append("mHeight = " + mHeight)
+                .append(System.getProperty("line.separator"));
+        stringBuilder.append("mAlignment = " + mAlignment)
+                .append(System.getProperty("line.separator"));
+        stringBuilder.append("mMainFunction = " + mMainFunction)
+                .append(System.getProperty("line.separator"));
+        for (MathElement mathElement : mMathElements) {
+            stringBuilder.append(mathElement);
+        }
+
+        return stringBuilder.toString();
     }
 
     private void updateSize(int width) {

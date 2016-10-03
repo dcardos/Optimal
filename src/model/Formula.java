@@ -1,6 +1,6 @@
 package model;
 
-import java.util.Vector;
+import java.util.TreeSet;
 
 /**
  * Created by Danilo on 29/09/2016.
@@ -15,7 +15,7 @@ public class Formula {
     private int mHeight;
     private int mAlignment;
     private boolean mMainFunction;
-    private Vector<MathElement> mMathElements;
+    private TreeSet<MathElement> mMathElements;
 
     public Formula(int x, int y, boolean mainFunction) {
         mId = counter++;
@@ -25,7 +25,7 @@ public class Formula {
         mHeight = defaultHeight;
         mAlignment = (mHeight/2) + mY;
         mMainFunction = mainFunction;
-        mMathElements = new Vector<>();
+        mMathElements = new TreeSet<>();
     }
 
     public int getId() {
@@ -56,7 +56,7 @@ public class Formula {
         return mMainFunction;
     }
 
-    public Vector<MathElement> getMathElements() {
+    public TreeSet<MathElement> getMathElements() {
         return mMathElements;
     }
 
@@ -72,17 +72,27 @@ public class Formula {
         mMainFunction = mainFunction;
     }
 
-    public void addMathElement(MathElement mathElement) {
-        mathElement.setX(mX + mWidth);
-        mathElement.setY(mAlignment - mathElement.getHeight()/2);
-        mMathElements.add(mathElement);
-        updateSize(mathElement.getWidth());
+    public void addMathElementAtTheEnd(MathElement mathElement) {
+        addMathElement(mathElement, mX+mWidth);
     }
 
-    public MathElement removeMathElement(int index) {
-        MathElement mathElementRemoved = mMathElements.remove(index);
-        updateSize(-mathElementRemoved.getWidth());
-        return mathElementRemoved;
+    public void addMathElement(MathElement mathElement, int xPosition) {
+        mathElement.setX(xPosition);
+        mathElement.setY(mAlignment - mathElement.getHeight()/2);
+        if (xPosition != mX+mWidth)     // if it will be added in the middle then update indexes
+            updateIndexes(mathElement, false);
+        mWidth = mWidth + mathElement.getWidth();
+        mMathElements.add(mathElement);
+        assert(mMathElements.contains(mathElement));
+    }
+
+    public boolean removeMathElement(MathElement mathElement) {
+        if (mMathElements.remove(mathElement)) {
+            mWidth = mWidth - mathElement.getWidth();
+            updateIndexes(mathElement, true);
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -115,8 +125,17 @@ public class Formula {
 
         return stringBuilder.toString();
     }
+    
+    private void updateIndexes(MathElement mathElementInQuestion, boolean removed){
+        System.out.println("Updating indexes");
+        // remember that the set will be already modified
+        for (MathElement mathElement : mMathElements) {
+            if (removed && mathElement.getX() > mathElementInQuestion.getX()) { // when element is removed
+                mathElement.setX(mathElement.getX() - mathElementInQuestion.getWidth());
+            } else if (!removed && mathElement.getX() >= mathElementInQuestion.getX()) {
+                mathElement.setX(mathElement.getX() + mathElementInQuestion.getWidth());
+            }   // for addition remembers that it will be added at the same position of an existing element
+        }
 
-    private void updateSize(int width) {
-        mWidth = mWidth + width;
     }
 }

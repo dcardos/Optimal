@@ -207,10 +207,15 @@ public class MainWindowController {
 
         // formula division
         Formula formula = new Formula(0, 0, false);
-        formula.addMathElement(new MathElement(somatorio));
-        formula.addMathElement(new MathElement(power));
-        formula.addMathElement(new MathElement(new Sum()));
-        formula.addMathElement(new MathElement(azao));
+        MathElement mathElementS = new MathElement(somatorio);
+        formula.addMathElementAtTheEnd(mathElementS);
+        MathElement mathElementP = new MathElement(power);
+        formula.addMathElementAtTheEnd(mathElementP);
+        formula.addMathElementAtTheEnd(new MathElement(new Sum()));
+        formula.addMathElementAtTheEnd(new MathElement(azao));
+
+//        formula.removeMathElement(mathElementP);
+//        formula.addMathElement(new MathElement(azao), 0);
 
         System.out.println(formula);
 

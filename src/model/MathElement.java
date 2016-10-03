@@ -8,7 +8,7 @@ import org.scilab.forge.jlatexmath.TeXIcon;
 /**
  * Created by Danilo on 21/09/2016.
  */
-public class MathElement {
+public class MathElement implements Comparable<MathElement>{
     private static int counter = 0;
     private int mId;
     private int mX;
@@ -98,5 +98,10 @@ public class MathElement {
                 .append(System.getProperty("line.separator"));
 
         return stringBuilder.toString();
+    }
+
+    @Override
+    public int compareTo(MathElement o) {
+        return mX - o.getX();   // sort by x position
     }
 }

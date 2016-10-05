@@ -5,39 +5,51 @@ import java.util.TreeSet;
 /**
  * Created by Danilo on 29/09/2016.
  */
-public class Formula {
+public class Formula implements Comparable<Formula>{
     private static final Integer defaultHeight = 66;
     private static int counter = 0;
     private int mId;
-    private int mX;
-    private int mY;
+    private int mXStart;
+    private int mYStart;
+    private int mXEnd;
+    private int mYEnd;
     private int mWidth;
     private int mHeight;
     private int mAlignment;
     private boolean mMainFunction;
     private TreeSet<MathElement> mMathElements;
 
-    public Formula(int x, int y, boolean mainFunction) {
+    public Formula(int xStart, int yStart, boolean mainFunction) {
         mId = counter++;
-        mX = x;
-        mY = y;
+        mXStart = xStart;
+        mYStart = yStart;
         mWidth = 0;
         mHeight = defaultHeight;
-        mAlignment = (mHeight/2) + mY;
+        mAlignment = (mHeight/2) + mYStart;
         mMainFunction = mainFunction;
         mMathElements = new TreeSet<>();
+        mXEnd = mXStart + mWidth;
+        mYEnd = mYStart + mHeight;
     }
 
     public int getId() {
         return mId;
     }
 
-    public int getX() {
-        return mX;
+    public int getXStart() {
+        return mXStart;
     }
 
-    public int getY() {
-        return mY;
+    public int getYStart() {
+        return mYStart;
+    }
+
+    public int getXEnd() {
+        return mXEnd;
+    }
+
+    public int getYEnd() {
+        return mYEnd;
     }
 
     public int getWidth() {
@@ -60,12 +72,22 @@ public class Formula {
         return mMathElements;
     }
 
-    public void setX(int x) {
-        mX = x;
+    public MathElement getMathElement(int xPosition) {
+        for (MathElement mathElement : mMathElements) {
+            if (isBetween(xPosition, mathElement.getXStart(), mathElement.getXEnd()))
+                return mathElement;
+        }
+        return null;
     }
 
-    public void setY(int y) {
-        mY = y;
+    public void setXStart(int xStart) {
+        mXStart = xStart;
+        mXEnd = mXStart + mWidth -1;
+    }
+
+    public void setYStart(int yStart) {
+        mYStart = yStart;
+        mYEnd = mYStart + mHeight -1;
     }
 
     public void setMainFunction(boolean mainFunction) {
@@ -73,13 +95,13 @@ public class Formula {
     }
 
     public void addMathElementAtTheEnd(MathElement mathElement) {
-        addMathElement(mathElement, mX+mWidth);
+        addMathElement(mathElement, mXStart +mWidth);
     }
 
     public void addMathElement(MathElement mathElement, int xPosition) {
-        mathElement.setX(xPosition);
-        mathElement.setY(mAlignment - mathElement.getHeight()/2);
-        if (xPosition != mX+mWidth)     // if it will be added in the middle then update indexes
+        mathElement.setXStart(xPosition);
+        mathElement.setYStart(mAlignment - mathElement.getHeight()/2);
+        if (xPosition != mXStart +mWidth)     // if it will be added in the middle then update indexes
             updateIndexes(mathElement, false);
         mWidth = mWidth + mathElement.getWidth();
         mMathElements.add(mathElement);
@@ -96,6 +118,11 @@ public class Formula {
     }
 
     @Override
+    public int compareTo(Formula o) {
+        return mYStart - o.getYStart();   // sort by y position
+    }
+
+    @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
 
@@ -107,9 +134,9 @@ public class Formula {
                 .append(System.getProperty("line.separator"));
         stringBuilder.append("mId = " + mId)
                 .append(System.getProperty("line.separator"));
-        stringBuilder.append("mX = " + mX)
+        stringBuilder.append("mXStart = " + mXStart)
                 .append(System.getProperty("line.separator"));
-        stringBuilder.append("my = " + mY)
+        stringBuilder.append("my = " + mYStart)
                 .append(System.getProperty("line.separator"));
         stringBuilder.append("mWidth = " + mWidth)
                 .append(System.getProperty("line.separator"));
@@ -125,15 +152,19 @@ public class Formula {
 
         return stringBuilder.toString();
     }
-    
+
+    public static boolean isBetween(int x, int lower, int upper) {
+        return (lower <= x) && (x <= upper);
+    }
+
     private void updateIndexes(MathElement mathElementInQuestion, boolean removed){
         System.out.println("Updating indexes");
         // remember that the set will be already modified
         for (MathElement mathElement : mMathElements) {
-            if (removed && mathElement.getX() > mathElementInQuestion.getX()) { // when element is removed
-                mathElement.setX(mathElement.getX() - mathElementInQuestion.getWidth());
-            } else if (!removed && mathElement.getX() >= mathElementInQuestion.getX()) {
-                mathElement.setX(mathElement.getX() + mathElementInQuestion.getWidth());
+            if (removed && mathElement.getXStart() > mathElementInQuestion.getXStart()) { // when element is removed
+                mathElement.setXStart(mathElement.getXStart() - mathElementInQuestion.getWidth());
+            } else if (!removed && mathElement.getXStart() >= mathElementInQuestion.getXStart()) {
+                mathElement.setXStart(mathElement.getXStart() + mathElementInQuestion.getWidth());
             }   // for addition remembers that it will be added at the same position of an existing element
         }
 

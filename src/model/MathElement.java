@@ -5,49 +5,67 @@ import org.scilab.forge.jlatexmath.TeXConstants;
 import org.scilab.forge.jlatexmath.TeXFormula;
 import org.scilab.forge.jlatexmath.TeXIcon;
 
+import java.awt.*;
+
 /**
  * Created by Danilo on 21/09/2016.
  */
 public class MathElement implements Comparable<MathElement>{
     private static int counter = 0;
     private int mId;
-    private int mX;
-    private int mY;
+    private int mXStart;
+    private int mYStart;
     private int mWidth;
     private int mHeight;
+    private int mXEnd;
+    private int mYEnd;
     private Expression mExpression;
     private TeXFormula mTeXFormula;
     private TeXIcon mIcon;  // to draw element
+    private Color mColor;
 
     public MathElement(Expression expression) {
         mId = counter++;
-        mX = 0;
-        mY = 0;
+        mXStart = 0;
+        mYStart = 0;
         mExpression = expression;
         mTeXFormula = new TeXFormula(mExpression.getLatexExpression());
         mIcon = mTeXFormula.createTeXIcon(TeXConstants.STYLE_DISPLAY, 20);
         mWidth = mIcon.getIconWidth();
         mHeight = mIcon.getIconHeight();
+        mXEnd = mXStart + mWidth;
+        mYEnd = mYStart + mHeight;
+        mColor = Color.black;
     }
 
     public int getId() {
         return mId;
     }
 
-    public int getX() {
-        return mX;
+    public int getXStart() {
+        return mXStart;
     }
 
-    public void setX(int x) {
-        mX = x;
+    public void setXStart(int XStart) {
+        mXStart = XStart;
+        mXEnd = mXStart + mWidth -1;
     }
 
-    public int getY() {
-        return mY;
+    public int getYStart() {
+        return mYStart;
     }
 
-    public void setY(int y) {
-        mY = y;
+    public void setYStart(int YStart) {
+        mYStart = YStart;
+        mYEnd = mYStart + mHeight -1;
+    }
+
+    public int getXEnd() {
+        return mXEnd;
+    }
+
+    public int getYEnd() {
+        return mYEnd;
     }
 
     public TeXIcon getIcon() {
@@ -78,6 +96,14 @@ public class MathElement implements Comparable<MathElement>{
         mExpression = expression;
     }
 
+    public Color getColor() {
+        return mColor;
+    }
+
+    public void setColor(Color color) {
+        mColor = color;
+    }
+
     @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
@@ -86,9 +112,13 @@ public class MathElement implements Comparable<MathElement>{
                 .append(System.getProperty("line.separator"));
         stringBuilder.append("mId = " + mId)
                 .append(System.getProperty("line.separator"));
-        stringBuilder.append("mX = " + mX)
+        stringBuilder.append("mXStart = " + mXStart)
                 .append(System.getProperty("line.separator"));
-        stringBuilder.append("my = " + mY)
+        stringBuilder.append("mXEnd = " + mXEnd)
+                .append(System.getProperty("line.separator"));
+        stringBuilder.append("myStart = " + mYStart)
+                .append(System.getProperty("line.separator"));
+        stringBuilder.append("myEnd = " + mYEnd)
                 .append(System.getProperty("line.separator"));
         stringBuilder.append("mWidth = " + mWidth)
                 .append(System.getProperty("line.separator"));
@@ -102,6 +132,6 @@ public class MathElement implements Comparable<MathElement>{
 
     @Override
     public int compareTo(MathElement o) {
-        return mX - o.getX();   // sort by x position
+        return mXStart - o.getXStart();   // sort by x position
     }
 }

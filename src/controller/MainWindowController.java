@@ -3,7 +3,6 @@ package controller;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextInputDialog;
@@ -17,14 +16,13 @@ import org.jfree.fx.FXGraphics2D;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.Optional;
-import java.util.Vector;
+import java.util.TreeSet;
 
 public class MainWindowController {
 
     private Main mMain;
     private FXGraphics2D g2;
-    private Vector<Formula> formulas;
+    private TreeSet<Formula> formulas;
 
     @FXML
     private Label labelEditVariable;
@@ -34,10 +32,6 @@ public class MainWindowController {
     //@FXML private Pane pane;
 
     @FXML private AnchorPane innerAnchorPane;
-
-    public static boolean isBetween(double x, double lower, double upper) {
-        return (lower <= x) && (x <= upper);
-    }
 
     public void setMain(Main main) {
         mMain = main;
@@ -51,58 +45,58 @@ public class MainWindowController {
 
         //canvas = new FXGraphics2DDemo3.MyCanvas();
 
-        this.formulas = new Vector<>();
+        this.formulas = new TreeSet<>();
         initializeCanvas();
 
         TextInputDialog dialog = new TextInputDialog("0");
 
-        canvas.addEventHandler(MouseEvent.MOUSE_CLICKED,
-                new EventHandler<MouseEvent>() {
-                    @Override
-                    public void handle(MouseEvent t) {
-                        System.out.println("X: " + t.getX() + "Y: " + t.getY());
-                        if (t.getClickCount() > 1) { // double click or more
-                            boolean popUpFlag = false;
-                            if (isBetween(t.getX(), 20, 50)) {
-                                dialog.setTitle("Summation");
-                                dialog.setHeaderText("Summation (versão simplona)");
-                                dialog.setContentText("Start on N = ");
-                                popUpFlag = true;
-                            }
-                            if (isBetween(t.getX(), 60, 90)) {
-                                dialog.setTitle("Power");
-                                dialog.setHeaderText("Power (versão simplona)");
-                                dialog.setContentText("Change base to: ");
-                                popUpFlag = true;
-                            }
-                            if (isBetween(t.getX(), 100, 130)) {
-                                dialog.setTitle("Coefficient");
-                                dialog.setHeaderText("Coefficient (versão simplona)");
-                                dialog.setContentText("Change letter to: ");
-                                popUpFlag = true;
-                            }
-                            if (popUpFlag) {
-                                popUpFlag = false;
-                                Optional<String> result = dialog.showAndWait();
-                                result.ifPresent(response -> System.out.println("Changed to: " + response));
-                            }
-                        }
-                    }
-                });
+//        canvas.addEventHandler(MouseEvent.MOUSE_CLICKED,
+//                new EventHandler<MouseEvent>() {
+//                    @Override
+//                    public void handle(MouseEvent t) {
+//                        System.out.println("X: " + t.getX() + "Y: " + t.getY());
+//                        if (t.getClickCount() > 1) { // double click or more
+//                            boolean popUpFlag = false;
+//                            if (isBetween(t.getX(), 20, 50)) {
+//                                dialog.setTitle("Summation");
+//                                dialog.setHeaderText("Summation (versão simplona)");
+//                                dialog.setContentText("Start on N = ");
+//                                popUpFlag = true;
+//                            }
+//                            if (isBetween(t.getX(), 60, 90)) {
+//                                dialog.setTitle("Power");
+//                                dialog.setHeaderText("Power (versão simplona)");
+//                                dialog.setContentText("Change base to: ");
+//                                popUpFlag = true;
+//                            }
+//                            if (isBetween(t.getX(), 100, 130)) {
+//                                dialog.setTitle("Coefficient");
+//                                dialog.setHeaderText("Coefficient (versão simplona)");
+//                                dialog.setContentText("Change letter to: ");
+//                                popUpFlag = true;
+//                            }
+//                            if (popUpFlag) {
+//                                popUpFlag = false;
+//                                Optional<String> result = dialog.showAndWait();
+//                                result.ifPresent(response -> System.out.println("Changed to: " + response));
+//                            }
+//                        }
+//                    }
+//                });
 
+        // TODO: turn back to black
         canvas.addEventHandler(MouseEvent.MOUSE_MOVED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent t) {
-                GraphicsContext gc = canvas.getGraphicsContext2D();
-                //gc.clearRect(t.getX() - 2, t.getY() - 2, 5, 5);
-//                gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-//                gc.setFill(Color.GREEN);
-//                gc.setStroke(Color.BLUE);
-                gc.strokeLine(20, 80, 50, 80);
-                if (isBetween(t.getX(), 20, 50)) {
-
-                    //System.out.println("Mouse moved");
-                }
+                Formula formula = getFormula((int)t.getY());
+                if (null == formula) return;
+                MathElement mathElement = formula.getMathElement(((int)t.getX()));
+                if (null == mathElement) return;
+                // To be even more precise about the element height
+                if (!Formula.isBetween((int)t.getY(),
+                        mathElement.getYStart(), mathElement.getYEnd())) return;
+                mathElement.setColor(Color.red);
+                drawMathElement(mathElement);
             }
         });
 
@@ -123,8 +117,8 @@ public class MainWindowController {
 
     private void initializeCanvas() {
         this.g2 = new FXGraphics2D(canvas.getGraphicsContext2D());
-
-        drawFormula(testFormula());
+        formulas.add(testFormula());
+        drawFormula(formulas.first());
 
         // Redraw canvas when size changes.
 //        canvas.widthProperty().addListener(evt -> drawFormula());
@@ -139,17 +133,29 @@ public class MainWindowController {
 
         for (MathElement mathElement : formula.getMathElements()) {
             // now create an actual image of the rendered equation
-            BufferedImage image = new BufferedImage(mathElement.getWidth(),
-                    mathElement.getHeight(), BufferedImage.TYPE_INT_ARGB);
-            Graphics2D gg = image.createGraphics();
-            gg.setColor(Color.WHITE);
-            gg.fillRect(0, 0, mathElement.getWidth(), mathElement.getHeight());
-            JLabel jl = new JLabel();
-            jl.setForeground(new Color(0, 0, 0));
-            mathElement.getIcon().paintIcon(jl, gg, 0, 0);
-            // at this point the image is created, you could also save it with ImageIO
-            this.g2.drawImage(image, mathElement.getX(), mathElement.getY(), null);
+            drawMathElement(mathElement);
         }
+    }
+
+    private void drawMathElement(MathElement mathElement) {
+//        To clear canvas:
+//        double width = canvas.getWidth();
+//        double height = canvas.getHeight();
+//        canvas.getGraphicsContext2D().clearRect(0, 0, width, height);
+
+
+        // now create an actual image of the rendered equation
+        BufferedImage image = new BufferedImage(mathElement.getWidth(),
+                mathElement.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        Graphics2D gg = image.createGraphics();
+        gg.setColor(Color.WHITE);
+        gg.fillRect(0, 0, mathElement.getWidth(), mathElement.getHeight());
+        JLabel jl = new JLabel();
+        jl.setForeground(mathElement.getColor());
+        mathElement.getIcon().paintIcon(jl, gg, 0, 0);
+        // at this point the image is created, you could also save it with ImageIO
+        this.g2.drawImage(image, mathElement.getXStart(), mathElement.getYStart(), null);
+
     }
 
     /* there a button which action is this function */
@@ -217,10 +223,16 @@ public class MainWindowController {
 //        formula.removeMathElement(mathElementP);
 //        formula.addMathElement(new MathElement(azao), 0);
 
-        System.out.println(formula);
+//        System.out.println(formula);
 
         return formula;
     }
 
-
+    private Formula getFormula(int yPosition) {
+        for (Formula formula : formulas) {
+            if (Formula.isBetween(yPosition, formula.getYStart(), formula.getYEnd()))
+                return formula;
+        }
+        return null;
+    }
 }

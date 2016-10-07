@@ -84,19 +84,31 @@ public class MainWindowController {
 //                    }
 //                });
 
-        // TODO: turn back to black
         canvas.addEventHandler(MouseEvent.MOUSE_MOVED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent t) {
                 Formula formula = getFormula((int)t.getY());
                 if (null == formula) return;
                 MathElement mathElement = formula.getMathElement(((int)t.getX()));
-                if (null == mathElement) return;
+                if (null == mathElement) {
+                    drawMathElement(formula.turnColorBackTo(Color.black));
+                    return;
+                }
                 // To be even more precise about the element height
                 if (!Formula.isBetween((int)t.getY(),
-                        mathElement.getYStart(), mathElement.getYEnd())) return;
-                mathElement.setColor(Color.red);
-                drawMathElement(mathElement);
+                        mathElement.getYStart(), mathElement.getYEnd())) {
+                    drawMathElement(formula.turnColorBackTo(Color.black));
+                    return;
+                }
+                // draw only if necessary
+                if (mathElement.getColor() != Color.red) {
+                    if (formula.isRedFlag())
+                        drawMathElement(formula.turnColorBackTo(Color.black));
+                    mathElement.setColor(Color.red);
+                    formula.setRedFlag(true);
+                    formula.setLastMathElementModified(mathElement);
+                    drawMathElement(mathElement);
+                }
             }
         });
 
@@ -138,6 +150,7 @@ public class MainWindowController {
     }
 
     private void drawMathElement(MathElement mathElement) {
+        if (mathElement == null) return;
 //        To clear canvas:
 //        double width = canvas.getWidth();
 //        double height = canvas.getHeight();

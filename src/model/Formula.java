@@ -1,12 +1,13 @@
 package model;
 
+import java.awt.*;
 import java.util.TreeSet;
 
 /**
  * Created by Danilo on 29/09/2016.
  */
 public class Formula implements Comparable<Formula>{
-    private static final Integer defaultHeight = 66;
+    private static final Integer defaultHeight = 80;
     private static int counter = 0;
     private int mId;
     private int mXStart;
@@ -17,11 +18,13 @@ public class Formula implements Comparable<Formula>{
     private int mHeight;
     private int mAlignment;
     private boolean mMainFunction;
+    private boolean mRedFlag;
     private TreeSet<MathElement> mMathElements;
+    private MathElement mLastMathElementModified;
 
     public Formula(int xStart, int yStart, boolean mainFunction) {
         mId = counter++;
-        mXStart = xStart;
+        mXStart = xStart == 0 ? 10 : xStart;    // adding margin if necessary
         mYStart = yStart;
         mWidth = 0;
         mHeight = defaultHeight;
@@ -30,6 +33,7 @@ public class Formula implements Comparable<Formula>{
         mMathElements = new TreeSet<>();
         mXEnd = mXStart + mWidth;
         mYEnd = mYStart + mHeight;
+        mLastMathElementModified = null;
     }
 
     public int getId() {
@@ -64,8 +68,24 @@ public class Formula implements Comparable<Formula>{
         return mAlignment;
     }
 
+    public boolean isRedFlag() {
+        return mRedFlag;
+    }
+
+    public void setRedFlag(boolean redFlag) {
+        this.mRedFlag = redFlag;
+    }
+
     public boolean isMainFunction() {
         return mMainFunction;
+    }
+
+    public MathElement getLastMathElementModified() {
+        return mLastMathElementModified;
+    }
+
+    public void setLastMathElementModified(MathElement lastMathElementModified) {
+        mLastMathElementModified = lastMathElementModified;
     }
 
     public TreeSet<MathElement> getMathElements() {
@@ -115,6 +135,17 @@ public class Formula implements Comparable<Formula>{
             return true;
         }
         return false;
+    }
+
+    public MathElement turnColorBackTo(Color color) {
+        if (mLastMathElementModified != null) {
+            if (mLastMathElementModified.getColor() != color) {
+                mLastMathElementModified.setColor(color);
+                mRedFlag = false;
+                return mLastMathElementModified;
+            }
+        }
+        return null;
     }
 
     @Override

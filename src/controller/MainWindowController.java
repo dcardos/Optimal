@@ -164,7 +164,7 @@ public class MainWindowController {
             }
         });
 
-        // TODO: apply transparency to the element
+        // TODO: apply transparency to the element: idea - use a grey color instead of black
         canvas.setOnDragOver(new EventHandler<DragEvent>() {
             @Override
             public void handle(DragEvent event) {
@@ -179,6 +179,7 @@ public class MainWindowController {
                     /* Add a mock element */
 //                    System.out.println("data is dragged over the canvas");
                     assert (null != beingDragged);
+                    beingDragged.setColor(Color.gray);
                     Formula formula = getFormula((int)event.getY());
                     if (null == formula) return;
                     MathElement mathElement = formula.getMathElement(((int)event.getX()));
@@ -238,6 +239,8 @@ public class MainWindowController {
                 if (db.hasString()) {
                     System.out.println("Dragged completed successfully");
                     success = true;
+                    formulas.first().getMathElement(beingDragged.getXStart()).setColor(Color.black);
+                    drawFormula(formulas.first());
                 }
                 /* let the source know whether the string was successfully
                  * transferred and used */

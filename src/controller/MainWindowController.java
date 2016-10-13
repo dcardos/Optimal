@@ -237,7 +237,7 @@ public class MainWindowController {
                 Dragboard db = event.getDragboard();
                 boolean success = false;
                 if (db.hasString()) {
-                    System.out.println("Dragged completed successfully");
+                    System.out.println("Dragged completed successfully!");
                     success = true;
                     formulas.first().getMathElement(beingDragged.getXStart()).setColor(Color.black);
                     drawFormula(formulas.first());

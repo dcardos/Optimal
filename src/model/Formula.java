@@ -34,6 +34,7 @@ public class Formula implements Comparable<Formula>{
         mXEnd = mXStart + mWidth;
         mYEnd = mYStart + mHeight;
         mLastMathElementModified = null;
+        mRedFlag = false;
     }
 
     public int getId() {
@@ -129,7 +130,7 @@ public class Formula implements Comparable<Formula>{
     }
 
     public boolean removeMathElement(MathElement mathElement) {
-        if (mMathElements.remove(mathElement)) {
+        if (mathElement!=null && mMathElements.remove(mathElement)) {
             mWidth = mWidth - mathElement.getWidth();
             updateIndexes(mathElement, true);
             return true;

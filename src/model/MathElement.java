@@ -19,6 +19,8 @@ public class MathElement implements Comparable<MathElement>{
     private int mHeight;
     private int mXEnd;
     private int mYEnd;
+    private int mXCenter;
+    private int mYCenter;
     private Expression mExpression;
     private TeXFormula mTeXFormula;
     private TeXIcon mIcon;  // to draw element
@@ -33,8 +35,10 @@ public class MathElement implements Comparable<MathElement>{
         mIcon = mTeXFormula.createTeXIcon(TeXConstants.STYLE_DISPLAY, 20);
         mWidth = mIcon.getIconWidth();
         mHeight = mIcon.getIconHeight();
-        mXEnd = mXStart + mWidth;
-        mYEnd = mYStart + mHeight;
+        mXEnd = mXStart + mWidth - 1;
+        mYEnd = mYStart + mHeight - 1;
+        mXCenter = (mXStart + mXEnd)/2;
+        mYCenter = (mYStart + mYEnd)/2;
         mColor = Color.black;
     }
 
@@ -49,6 +53,7 @@ public class MathElement implements Comparable<MathElement>{
     public void setXStart(int XStart) {
         mXStart = XStart;
         mXEnd = mXStart + mWidth -1;
+        mXCenter = (mXStart + mXEnd)/2;
     }
 
     public int getYStart() {
@@ -58,6 +63,7 @@ public class MathElement implements Comparable<MathElement>{
     public void setYStart(int YStart) {
         mYStart = YStart;
         mYEnd = mYStart + mHeight -1;
+        mYCenter = (mYStart + mYEnd)/2;
     }
 
     public int getXEnd() {
@@ -66,6 +72,14 @@ public class MathElement implements Comparable<MathElement>{
 
     public int getYEnd() {
         return mYEnd;
+    }
+
+    public int getXCenter() {
+        return mXCenter;
+    }
+
+    public int getYCenter() {
+        return mYCenter;
     }
 
     public TeXIcon getIcon() {

@@ -6,7 +6,10 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextInputDialog;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
+import javafx.scene.input.*;
 import javafx.scene.layout.AnchorPane;
 import model.Formula;
 import model.MathElement;
@@ -24,12 +27,13 @@ public class MainWindowController {
     private FXGraphics2D g2;
     private TreeSet<Formula> formulas;
 
-    @FXML
-    private Label labelEditVariable;
+    private MathElement beingDragged;
+
+    @FXML private Label labelEditVariable;
 
     @FXML private Canvas canvas;
 
-    //@FXML private Pane pane;
+    @FXML private ImageView imageView;
 
     @FXML private AnchorPane innerAnchorPane;
 
@@ -47,6 +51,38 @@ public class MainWindowController {
 
         this.formulas = new TreeSet<>();
         initializeCanvas();
+
+
+        /* For imageView
+        Beginning
+         */
+        Summation somatorio = new Summation();
+        MathElement mathElement = new MathElement(somatorio);
+        BufferedImage image = new BufferedImage(mathElement.getWidth(),
+                mathElement.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        Graphics2D gg = image.createGraphics();
+        gg.setColor(Color.WHITE);
+        gg.fillRect(0, 0, mathElement.getWidth(), mathElement.getHeight());
+        JLabel jl = new JLabel();
+        jl.setForeground(mathElement.getColor());
+        mathElement.getIcon().paintIcon(jl, gg, 0, 0);
+        // writing image buffer to image
+        WritableImage wr = null;
+        if (image != null) {
+            wr = new WritableImage(image.getWidth(), image.getHeight());
+            PixelWriter pw = wr.getPixelWriter();
+            for (int x = 0; x < image.getWidth(); x++) {
+                for (int y = 0; y < image.getHeight(); y++) {
+                    pw.setArgb(x, y, image.getRGB(x, y));
+                }
+            }
+        }
+        imageView.setImage(wr);
+        /* For imageView
+        Ending
+         */
+
+
 
         TextInputDialog dialog = new TextInputDialog("0");
 
@@ -112,6 +148,106 @@ public class MainWindowController {
             }
         });
 
+        imageView.setOnDragDetected(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                /* drag was detected, start a drag-and-drop gesture*/
+                /* allow any transfer mode */
+                Dragboard db = imageView.startDragAndDrop(TransferMode.ANY);
+                /* Put a String on a dragboard */
+                beingDragged = new MathElement(new Summation());
+                ClipboardContent content = new ClipboardContent();
+                content.putString("Is valid");
+                db.setContent(content);
+
+                event.consume();
+            }
+        });
+
+        // TODO: apply transparency to the element
+        canvas.setOnDragOver(new EventHandler<DragEvent>() {
+            @Override
+            public void handle(DragEvent event) {
+                /* data is dragged over the target */
+                /* accept it only if it is not dragged from the same node
+                 * and if it has a string data */
+                if (event.getGestureSource() != canvas &&
+                        event.getDragboard().hasString()) {
+                    /* allow for both copying and moving, whatever user chooses */
+                    event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+
+                    /* Add a mock element */
+//                    System.out.println("data is dragged over the canvas");
+                    assert (null != beingDragged);
+                    Formula formula = getFormula((int)event.getY());
+                    if (null == formula) return;
+                    MathElement mathElement = formula.getMathElement(((int)event.getX()));
+                    if (null == mathElement) {
+                        return;
+                    }
+                    // To be even more precise about the element height
+//                    if (!Formula.isBetween((int)event.getY(),
+//                            mathElement.getYStart(), mathElement.getYEnd())) {
+//                        drawMathElement(formula.turnColorBackTo(Color.black));
+//                        return;
+//                    }
+                    // inside the formula, over a mathElement area
+                    if (formula.getLastMathElementModified() != beingDragged) { // first addition
+                        formula.addMathElement(beingDragged, mathElement.getXStart());
+                        formula.setLastMathElementModified(beingDragged);
+                        drawFormula(formula);
+                    } else {
+//                        System.out.println("Current x: " + event.getX() + "ME X Start: " + mathElement.getXStart());
+                        if (mathElement.getXStart() < beingDragged.getXStart()
+                                && event.getX() <= mathElement.getXCenter()) { // moving left
+                            formula.removeMathElement(beingDragged);
+                            formula.addMathElement(beingDragged, mathElement.getXStart());
+                            drawFormula(formula);
+                        } else if (mathElement.getXStart() >= beingDragged.getXEnd() &&
+                                event.getX() > mathElement.getXCenter()) {    // moving right
+                            formula.removeMathElement(beingDragged);
+                            formula.addMathElement(beingDragged, mathElement.getXEnd());
+                            drawFormula(formula);
+                        }
+                    }
+                }
+                event.consume();
+            }
+        });
+
+        canvas.setOnDragExited(new EventHandler<DragEvent>() {
+            @Override
+            public void handle(DragEvent event) {
+                // TODO: fix that for any formula
+                if (!event.isDropCompleted()) {
+                    System.out.println("Dragged did not completed");
+                    formulas.first().removeMathElement(beingDragged);
+                    drawFormula(formulas.first());
+                    beingDragged = null;
+                }
+                event.consume();
+            }
+        });
+
+        canvas.setOnDragDropped(new EventHandler<DragEvent>() {
+            public void handle(DragEvent event) {
+                /* data dropped */
+                /* if there is a string data on dragboard, read it and use it */
+                Dragboard db = event.getDragboard();
+                boolean success = false;
+                if (db.hasString()) {
+                    System.out.println("Dragged completed successfully");
+                    success = true;
+                }
+                /* let the source know whether the string was successfully
+                 * transferred and used */
+                event.setDropCompleted(success);
+
+                event.consume();
+            }
+        });
+
+
         Button b1 = new Button("X");
         //b1.setLayoutX(460);
         //b1.setLayoutY(5);
@@ -119,8 +255,6 @@ public class MainWindowController {
         innerAnchorPane.setRightAnchor(b1, 50.0);
         innerAnchorPane.setTopAnchor(b1, 5.0);
 
-//        GraphicsContext gc = canvas.getGraphicsContext2D();
-//        drawShapes(gc);
     }
 
     public void closeWindow() {
@@ -139,9 +273,9 @@ public class MainWindowController {
 
     private void drawFormula(Formula formula) {
 //        To clear canvas:
-//        double width = canvas.getWidth();
-//        double height = canvas.getHeight();
-//        canvas.getGraphicsContext2D().clearRect(0, 0, width, height);
+        double width = canvas.getWidth();
+        double height = canvas.getHeight();
+        canvas.getGraphicsContext2D().clearRect(0, 0, width, height);
 
         for (MathElement mathElement : formula.getMathElements()) {
             // now create an actual image of the rendered equation

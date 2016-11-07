@@ -11,15 +11,20 @@ import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.*;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.util.Pair;
 import model.Formula;
 import model.MathElement;
 import model.math.*;
+import org.jetbrains.annotations.Contract;
 import org.jfree.fx.FXGraphics2D;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.Optional;
 import java.util.TreeSet;
+import java.util.Vector;
 
 public class MainWindowController {
 
@@ -33,92 +38,86 @@ public class MainWindowController {
 
     @FXML private Canvas canvas;
 
-    @FXML private ImageView imageView;
-
     @FXML private AnchorPane innerAnchorPane;
+
+    @FXML private AnchorPane anchorPaneModel;
 
     public void setMain(Main main) {
         mMain = main;
         labelEditVariable.setText("Editing Sum: \u2211");
         innerAnchorPane.setStyle("-fx-background-color: #ffe1c5");
 
+        // Initializing fonts for LateX
         javafx.scene.text.Font.loadFont(Main.class.getResourceAsStream("/org/scilab/forge/jlatexmath/fonts/base/jlm_cmmi10.ttf"), 1);
         javafx.scene.text.Font.loadFont(Main.class.getResourceAsStream("/org/scilab/forge/jlatexmath/fonts/base/jlm_cmex10.ttf"), 1);
         javafx.scene.text.Font.loadFont(Main.class.getResourceAsStream("/org/scilab/forge/jlatexmath/fonts/maths/jlm_cmsy10.ttf"), 1);
         javafx.scene.text.Font.loadFont(Main.class.getResourceAsStream("/org/scilab/forge/jlatexmath/fonts/latin/jlm_cmr10.ttf"), 1);
 
-        //canvas = new FXGraphics2DDemo3.MyCanvas();
-
+        // Initializing formulas
         this.formulas = new TreeSet<>();
+
+        // Initializing canvas
         initializeCanvas();
 
+        // Initializing Model Tab with ME
+        Vector<Pair> imageEs = makeModelGridElements();
 
-        /* For imageView
-        Beginning
-         */
-        Summation somatorio = new Summation();
-        MathElement mathElement = new MathElement(somatorio);
-        BufferedImage image = new BufferedImage(mathElement.getWidth(),
-                mathElement.getHeight(), BufferedImage.TYPE_INT_ARGB);
-        Graphics2D gg = image.createGraphics();
-        gg.setColor(Color.WHITE);
-        gg.fillRect(0, 0, mathElement.getWidth(), mathElement.getHeight());
-        JLabel jl = new JLabel();
-        jl.setForeground(mathElement.getColor());
-        mathElement.getIcon().paintIcon(jl, gg, 0, 0);
-        // writing image buffer to image
-        WritableImage wr = null;
-        if (image != null) {
-            wr = new WritableImage(image.getWidth(), image.getHeight());
-            PixelWriter pw = wr.getPixelWriter();
-            for (int x = 0; x < image.getWidth(); x++) {
-                for (int y = 0; y < image.getHeight(); y++) {
-                    pw.setArgb(x, y, image.getRGB(x, y));
+        for (Pair<ImageView, Expression> pair : imageEs) {
+            ImageView imageView = pair.getKey();
+            imageView.setOnDragDetected(new EventHandler<MouseEvent>() {
+                @Override
+                public void handle(MouseEvent event) {
+                /* drag was detected, start a drag-and-drop gesture*/
+                /* allow any transfer mode */
+                    Dragboard db = imageView.startDragAndDrop(TransferMode.ANY);
+                /* Put a String on a drag board */
+                    beingDragged = new MathElement(pair.getValue());
+                    ClipboardContent content = new ClipboardContent();
+                    content.putString("Is valid");
+                    db.setContent(content);
+
+                    event.consume();
                 }
-            }
+            });
         }
-        imageView.setImage(wr);
-        /* For imageView
-        Ending
-         */
-
-
 
         TextInputDialog dialog = new TextInputDialog("0");
 
-//        canvas.addEventHandler(MouseEvent.MOUSE_CLICKED,
-//                new EventHandler<MouseEvent>() {
-//                    @Override
-//                    public void handle(MouseEvent t) {
-//                        System.out.println("X: " + t.getX() + "Y: " + t.getY());
-//                        if (t.getClickCount() > 1) { // double click or more
-//                            boolean popUpFlag = false;
-//                            if (isBetween(t.getX(), 20, 50)) {
-//                                dialog.setTitle("Summation");
-//                                dialog.setHeaderText("Summation (versão simplona)");
-//                                dialog.setContentText("Start on N = ");
-//                                popUpFlag = true;
-//                            }
-//                            if (isBetween(t.getX(), 60, 90)) {
-//                                dialog.setTitle("Power");
-//                                dialog.setHeaderText("Power (versão simplona)");
-//                                dialog.setContentText("Change base to: ");
-//                                popUpFlag = true;
-//                            }
-//                            if (isBetween(t.getX(), 100, 130)) {
-//                                dialog.setTitle("Coefficient");
-//                                dialog.setHeaderText("Coefficient (versão simplona)");
-//                                dialog.setContentText("Change letter to: ");
-//                                popUpFlag = true;
-//                            }
-//                            if (popUpFlag) {
-//                                popUpFlag = false;
-//                                Optional<String> result = dialog.showAndWait();
-//                                result.ifPresent(response -> System.out.println("Changed to: " + response));
-//                            }
-//                        }
-//                    }
-//                });
+        canvas.addEventHandler(MouseEvent.MOUSE_CLICKED,
+                new EventHandler<MouseEvent>() {
+                    @Override
+                    public void handle(MouseEvent t) {
+                        Formula formula = getFormula((int)t.getY());
+                        if (null == formula) return;
+                        MathElement mathElement = formula.getMathElement(((int)t.getX()));
+                        if (null == mathElement) return;
+                        // To be even more precise about the element height
+                        if (Formula.isBetween((int)t.getY(),
+                                mathElement.getYStart(), mathElement.getYEnd())) {
+                            drawMathElement(formula.turnColorBackTo(Color.black));
+                            if (mathElement.getExpression() instanceof Summation) {
+                                Dialogs dialogs = new Dialogs();
+                                Optional<Pair<String, String>> result = dialogs.summationDialog();
+                                result.ifPresent(indexes -> {
+                                    System.out.println("SP=" + indexes.getKey() + ", EP=" + indexes.getValue());
+                                    Coefficient coefficient = new Coefficient();
+                                    coefficient.setLetter("i");
+                                    Constant constant = new Constant();
+                                    constant.setFloat(Float.valueOf(indexes.getKey()));
+                                    Equal equal = new Equal();
+                                    equal.setLeftExpression(coefficient);
+                                    equal.setRightExpression(constant);
+                                    ((Summation) mathElement.getExpression()).setStartingPoint(equal);
+                                    constant = new Constant();
+                                    constant.setFloat(Float.valueOf(indexes.getValue()));
+                                    ((Summation) mathElement.getExpression()).setStoppingPoint(constant);
+                                    drawMathElement(mathElement);
+                                    formula.setLastMathElementModified(mathElement);
+                                });
+                            }
+                        }
+                    }
+                });
 
         canvas.addEventHandler(MouseEvent.MOUSE_MOVED, new EventHandler<MouseEvent>() {
             @Override
@@ -148,23 +147,6 @@ public class MainWindowController {
             }
         });
 
-        imageView.setOnDragDetected(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                /* drag was detected, start a drag-and-drop gesture*/
-                /* allow any transfer mode */
-                Dragboard db = imageView.startDragAndDrop(TransferMode.ANY);
-                /* Put a String on a dragboard */
-                beingDragged = new MathElement(new Summation());
-                ClipboardContent content = new ClipboardContent();
-                content.putString("Is valid");
-                db.setContent(content);
-
-                event.consume();
-            }
-        });
-
-        // TODO: apply transparency to the element: idea - use a grey color instead of black
         canvas.setOnDragOver(new EventHandler<DragEvent>() {
             @Override
             public void handle(DragEvent event) {
@@ -241,6 +223,7 @@ public class MainWindowController {
                     success = true;
                     formulas.first().getMathElement(beingDragged.getXStart()).setColor(Color.black);
                     drawFormula(formulas.first());
+                    beingDragged = null;
                 }
                 /* let the source know whether the string was successfully
                  * transferred and used */
@@ -251,12 +234,16 @@ public class MainWindowController {
         });
 
 
-        Button b1 = new Button("X");
-        //b1.setLayoutX(460);
-        //b1.setLayoutY(5);
-        innerAnchorPane.getChildren().add(b1);
-        innerAnchorPane.setRightAnchor(b1, 50.0);
-        innerAnchorPane.setTopAnchor(b1, 5.0);
+        HBox hbButtons = new HBox();
+        hbButtons.setSpacing(10.0);
+        Button buttonRemove = new Button("X");
+        Button buttonLateX = new Button("Entry Formula");
+        hbButtons.getChildren().addAll(buttonLateX, buttonRemove);
+        //buttonRemove.setLayoutX(460);
+        //buttonRemove.setLayoutY(5);
+        innerAnchorPane.getChildren().add(hbButtons);
+        innerAnchorPane.setRightAnchor(hbButtons, 30.0);
+        innerAnchorPane.setTopAnchor(hbButtons, Double.valueOf(formulas.first().getAlignment()) - 15);
 
     }
 
@@ -293,8 +280,72 @@ public class MainWindowController {
 //        double height = canvas.getHeight();
 //        canvas.getGraphicsContext2D().clearRect(0, 0, width, height);
 
+        BufferedImage image = prepareToDrawME(mathElement);
 
+        // at this point the image is created, you could also save it with ImageIO
+        this.g2.drawImage(image, mathElement.getXStart(), mathElement.getYStart(), null);
+    }
+
+    private Vector<Pair> makeModelGridElements() {
+        Pair<ImageView, Expression> pair;
+        Vector<Pair> imageEs = new Vector<>();
+        Vector<MathElement> mathElements = new Vector<>();
+
+        Summation somatorio = new Summation();
+        Constant constant = new Constant();
+        constant.setFloat(5);
+        Sum sum = new Sum();
+        Subtraction subtraction = new Subtraction();
+        Equal equal = new Equal();
+        LessOrEqual lessOrEqual = new LessOrEqual();
+        GreaterOrEqual greaterOrEqual = new GreaterOrEqual();
+        MathElement mathElementA = new MathElement(somatorio);
+        mathElements.add(mathElementA);
+        mathElementA = new MathElement(constant);
+        mathElements.add(mathElementA);
+        mathElementA = new MathElement(sum);
+        mathElements.add(mathElementA);
+        mathElementA = new MathElement(subtraction);
+        mathElements.add(mathElementA);
+        mathElementA = new MathElement(equal);
+        mathElements.add(mathElementA);
+        mathElementA = new MathElement(lessOrEqual);
+        mathElements.add(mathElementA);
+        mathElementA = new MathElement(greaterOrEqual);
+        mathElements.add(mathElementA);
+
+        double vAlignment = 50.0;
+        double position = 400.0;
+        for (MathElement mathElement : mathElements) {
+            BufferedImage image = prepareToDrawME(mathElement);
+            // writing image buffer to image
+            WritableImage wr = null;
+            if (image != null) {
+                wr = new WritableImage(image.getWidth(), image.getHeight());
+                PixelWriter pw = wr.getPixelWriter();
+                for (int x = 0; x < image.getWidth(); x++) {
+                    for (int y = 0; y < image.getHeight(); y++) {
+                        pw.setArgb(x, y, image.getRGB(x, y));
+                    }
+                }
+            }
+            // creating a imageView element
+            ImageView imageView = new ImageView();
+            imageView.setImage(wr);
+            anchorPaneModel.getChildren().add(imageView);
+            anchorPaneModel.setLeftAnchor(imageView, position);
+            anchorPaneModel.setTopAnchor(imageView,vAlignment-(mathElement.getHeight()/2));
+            position += mathElement.getWidth() + 1;
+            pair = new Pair<>(imageView, mathElement.getExpression());
+            imageEs.add(pair);
+        }
+        return imageEs;
+    }
+
+    @Contract("null -> fail")
+    private BufferedImage prepareToDrawME(MathElement mathElement) {
         // now create an actual image of the rendered equation
+        assert (null != mathElement);
         BufferedImage image = new BufferedImage(mathElement.getWidth(),
                 mathElement.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics2D gg = image.createGraphics();
@@ -303,26 +354,10 @@ public class MainWindowController {
         JLabel jl = new JLabel();
         jl.setForeground(mathElement.getColor());
         mathElement.getIcon().paintIcon(jl, gg, 0, 0);
-        // at this point the image is created, you could also save it with ImageIO
-        this.g2.drawImage(image, mathElement.getXStart(), mathElement.getYStart(), null);
-
+//        System.out.println(mathElement.getExpression().getLatexExpression());
+        return image;
     }
 
-    /* there a button which action is this function */
-    public void generateFormula() {
-
-//        if (formulaPositions.isEmpty())
-//            formulaPositions.add(2);
-//        else
-//            formulaPositions.add(formulaPositions.lastElement()+formulaHeight);
-//
-//        drawFormula(formulaPositions.lastElement());
-//        /* adding buttons next to the formula */
-//        Button b1 = new Button(String.valueOf(formulaPositions.size()));
-//        b1.setLayoutX(460);
-//        b1.setLayoutY(formulaPositions.lastElement()*20 - 15);
-//        pane.getChildren().add(b1);
-    }
 
     public Formula testFormula() {
         // create a formula
@@ -362,7 +397,7 @@ public class MainWindowController {
         expIgual1.setRightExpression(um);
 
         // formula division
-        Formula formula = new Formula(0, 0, false);
+        Formula formula = new Formula(0, 40, true);
         MathElement mathElementS = new MathElement(somatorio);
         formula.addMathElementAtTheEnd(mathElementS);
         MathElement mathElementP = new MathElement(power);

@@ -24,7 +24,7 @@ public class Formula implements Comparable<Formula>{
 
     public Formula(int xStart, int yStart, boolean mainFunction) {
         mId = counter++;
-        mXStart = xStart == 0 ? 10 : xStart;    // adding margin if necessary
+        mXStart = xStart == 0 ? 30 : xStart;    // adding margin if necessary
         mYStart = yStart;
         mWidth = 0;
         mHeight = defaultHeight;
@@ -190,7 +190,7 @@ public class Formula implements Comparable<Formula>{
     }
 
     private void updateIndexes(MathElement mathElementInQuestion, boolean removed){
-        System.out.println("Updating indexes");
+//        System.out.println("Updating indexes");
         // remember that the set will be already modified
         for (MathElement mathElement : mMathElements) {
             if (removed && mathElement.getXStart() > mathElementInQuestion.getXStart()) { // when element is removed

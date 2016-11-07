@@ -7,7 +7,13 @@ public class Subtraction extends BasicExpression implements Expression {
 
     @Override
     public String getLatexExpression() {
-        // TODO:
-        return null;
+        StringBuilder latex = new StringBuilder();
+        if (mLeftExpression != null)
+            latex.append(mLeftExpression.getLatexExpression());
+        latex.append(" - ");
+        if (mRightExpression != null)
+            latex.append(mRightExpression.getLatexExpression());
+
+        return latex.toString();
     }
 }

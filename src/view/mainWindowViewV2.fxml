@@ -8,12 +8,10 @@
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TreeView?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="850.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.MainWindowController">
@@ -39,19 +37,6 @@
       </MenuBar>
       <TabPane layoutY="29.0" prefHeight="140.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="30.0">
         <tabs>
-            <Tab text="Model">
-              <content>
-                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                     <children>
-                        <RadioButton layoutX="23.0" layoutY="29.0" mnemonicParsing="false" text="Min" />
-                        <RadioButton layoutX="23.0" layoutY="60.0" mnemonicParsing="false" text="Max" />
-                        <Button layoutX="870.0" layoutY="35.0" mnemonicParsing="false" onAction="#generateFormula" text="Generate" />
-                        <Button layoutX="224.0" layoutY="20.0" mnemonicParsing="false" text="Button" />
-                        <ImageView fx:id="imageView" fitHeight="45.0" fitWidth="50.0" layoutX="323.0" layoutY="17.0" pickOnBounds="true" preserveRatio="true" />
-                     </children>
-                  </AnchorPane>
-              </content>
-            </Tab>
           <Tab text="Variables">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
@@ -94,6 +79,11 @@
                   </AnchorPane>
             </content>
           </Tab>
+            <Tab fx:id="tabModel" text="Model">
+              <content>
+                <AnchorPane fx:id="anchorPaneModel" minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+              </content>
+            </Tab>
         </tabs>
       </TabPane>
       <TreeView layoutY="237.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="170.0" />

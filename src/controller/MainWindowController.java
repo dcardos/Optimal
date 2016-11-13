@@ -100,19 +100,13 @@ public class MainWindowController {
                                 Optional<Pair<String, String>> result = dialogs.summationDialog();
                                 result.ifPresent(indexes -> {
                                     System.out.println("SP=" + indexes.getKey() + ", EP=" + indexes.getValue());
-                                    Coefficient coefficient = new Coefficient();
-                                    coefficient.setLetter("i");
-                                    Constant constant = new Constant();
-                                    constant.setFloat(Float.valueOf(indexes.getKey()));
-                                    Equal equal = new Equal();
-                                    equal.setLeftExpression(coefficient);
-                                    equal.setRightExpression(constant);
-                                    ((Summation) mathElement.getExpression()).setStartingPoint(equal);
-                                    constant = new Constant();
-                                    constant.setFloat(Float.valueOf(indexes.getValue()));
-                                    ((Summation) mathElement.getExpression()).setStoppingPoint(constant);
+                                    ((Summation) mathElement.getExpression())
+                                        .setStartingPointFromPrimitives("i", Integer.valueOf(indexes.getKey()));
+                                    ((Summation) mathElement.getExpression())
+                                            .setStoppingPointFromInt(Integer.valueOf(indexes.getValue()));
                                     drawMathElement(mathElement);
                                     formula.setLastMathElementModified(mathElement);
+                                    System.out.println(formula);
                                 });
                             }
                         }
@@ -275,6 +269,7 @@ public class MainWindowController {
 
     private void drawMathElement(MathElement mathElement) {
         if (mathElement == null) return;
+        mathElement.updateIcon();
 //        To clear canvas:
 //        double width = canvas.getWidth();
 //        double height = canvas.getHeight();
@@ -354,7 +349,6 @@ public class MainWindowController {
         JLabel jl = new JLabel();
         jl.setForeground(mathElement.getColor());
         mathElement.getIcon().paintIcon(jl, gg, 0, 0);
-//        System.out.println(mathElement.getExpression().getLatexExpression());
         return image;
     }
 

@@ -16,12 +16,29 @@ public class Summation implements Expression {
         mStartingPoint = startingPoint;
     }
 
+    public void setStartingPointFromPrimitives(String letter, int starter) {
+        Coefficient coefficient = new Coefficient();
+        coefficient.setLetter(letter);
+        Constant constant = new Constant();
+        constant.setFloat(starter);
+        Equal equal = new Equal();
+        equal.setLeftExpression(coefficient);
+        equal.setRightExpression(constant);
+        setStartingPoint(equal);
+    }
+
     public Element getStoppingPoint() {
         return mStoppingPoint;
     }
 
     public void setStoppingPoint(Element stoppingPoint) {
         mStoppingPoint = stoppingPoint;
+    }
+
+    public void setStoppingPointFromInt(int stopper) {
+        Constant constant = new Constant();
+        constant.setFloat(stopper);
+        setStoppingPoint(constant);
     }
 
     public Expression getExpression() {

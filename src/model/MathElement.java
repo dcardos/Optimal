@@ -118,6 +118,11 @@ public class MathElement implements Comparable<MathElement>{
         mColor = color;
     }
 
+    public void updateIcon() {
+        mTeXFormula = new TeXFormula(mExpression.getLatexExpression());
+        mIcon = mTeXFormula.createTeXIcon(TeXConstants.STYLE_DISPLAY, 20);
+    }
+
     @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();

@@ -5,7 +5,6 @@ import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextInputDialog;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
@@ -22,6 +21,7 @@ import org.jfree.fx.FXGraphics2D;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.List;
 import java.util.Optional;
 import java.util.TreeSet;
 import java.util.Vector;
@@ -81,8 +81,6 @@ public class MainWindowController {
             });
         }
 
-        TextInputDialog dialog = new TextInputDialog("0");
-
         canvas.addEventHandler(MouseEvent.MOUSE_CLICKED,
                 new EventHandler<MouseEvent>() {
                     @Override
@@ -97,13 +95,13 @@ public class MainWindowController {
                             drawMathElement(formula.turnColorBackTo(Color.black));
                             if (mathElement.getExpression() instanceof Summation) {
                                 Dialogs dialogs = new Dialogs();
-                                Optional<Pair<String, String>> result = dialogs.summationDialog();
+                                Optional<List<String>> result = dialogs.summationDialog();
                                 result.ifPresent(indexes -> {
-                                    System.out.println("SP=" + indexes.getKey() + ", EP=" + indexes.getValue());
+                                    System.out.println("SP=" + indexes.get(0) + ", EP=" + indexes.get(1));
                                     ((Summation) mathElement.getExpression())
-                                        .setStartingPointFromPrimitives("i", Integer.valueOf(indexes.getKey()));
+                                        .setStartingPointFromPrimitives(indexes.get(2), Integer.valueOf(indexes.get(0)));
                                     ((Summation) mathElement.getExpression())
-                                            .setStoppingPointFromInt(Integer.valueOf(indexes.getValue()));
+                                            .setStoppingPointFromInt(Integer.valueOf(indexes.get(1)));
                                     drawMathElement(mathElement);
                                     formula.setLastMathElementModified(mathElement);
                                     System.out.println(formula);

@@ -5,8 +5,9 @@ import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.util.Pair;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -14,11 +15,25 @@ import java.util.Optional;
  */
 public class Dialogs {
     // Create the custom mDialog.
-    private Dialog<Pair<String, String>> mDialog = new Dialog<>();
+    private Dialog<List<String>> mDialog;
+    private TextInputDialog mTextInputDialog;
     private boolean mFlag1;
     private boolean mFlag2;
 
-    public Optional<Pair<String, String>> summationDialog() {
+    public Optional<String> latexEntryDialog() {
+        mTextInputDialog = new TextInputDialog("Enter LateX formula:");
+
+        mTextInputDialog.setTitle("LateX Formula");
+        mTextInputDialog.setHeaderText("Please, enter the lateX syntax of your formula");
+        mTextInputDialog.setContentText("Enter LateX formula:");
+
+        Optional<String> result = mTextInputDialog.showAndWait();
+        return result;
+        //result.ifPresent(name -> System.out.println("Your name: " + name));
+    }
+
+    public Optional<List<String>> summationDialog() {
+        mDialog = new Dialog<>();
         mDialog.setTitle("Summation Dialog");
         mDialog.setHeaderText("Enter the summation parameters");
 
@@ -42,11 +57,21 @@ public class Dialogs {
         startingPoint.setPromptText("Starting point");
         TextField endingPoint = new TextField();
         endingPoint.setPromptText("Ending point");
+        // for choosing letter from a combo box
+        List<String> choices = new ArrayList<>();
+        char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray();
+        for (char k : alphabet) choices.add(String.valueOf(k));
+        ComboBox<String> letterChoice = new ComboBox<>();
+        letterChoice.getItems().addAll(choices);
+        letterChoice.getSelectionModel().select("i");
+
 
         grid.add(new Label("Starting point:"), 0, 0);
         grid.add(startingPoint, 1, 0);
         grid.add(new Label("Ending point:"), 0, 1);
         grid.add(endingPoint, 1, 1);
+        grid.add(new Label("Choose index letter:"), 0, 2);
+        grid.add(letterChoice, 1, 2);
 
         // Enable/Disable login button depending on whether a startingPoint was entered.
         Node okBtn = mDialog.getDialogPane().lookupButton(okButton);
@@ -72,12 +97,16 @@ public class Dialogs {
         // Convert the mResult to a startingPoint-endingPoint-pair when the ok button is clicked.
         mDialog.setResultConverter(dialogButton -> {
             if (dialogButton == okButton) {
-                return new Pair<>(startingPoint.getText(), endingPoint.getText());
+                List<String> resultStructure = new ArrayList<String>();
+                resultStructure.add(startingPoint.getText());
+                resultStructure.add(endingPoint.getText());
+                resultStructure.add(letterChoice.getValue());
+                return resultStructure;
             }
             return null;
         });
 
-        Optional<Pair<String, String>> result = mDialog.showAndWait();
+        Optional<List<String>> result = mDialog.showAndWait();
 
         return result;
     }

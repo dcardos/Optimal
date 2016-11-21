@@ -121,6 +121,12 @@ public class MathElement implements Comparable<MathElement>{
     public void updateIcon() {
         mTeXFormula = new TeXFormula(mExpression.getLatexExpression());
         mIcon = mTeXFormula.createTeXIcon(TeXConstants.STYLE_DISPLAY, 20);
+        mWidth = mIcon.getIconWidth();
+        mHeight = mIcon.getIconHeight();
+        mXEnd = mXStart + mWidth - 1;
+        mYEnd = mYStart + mHeight - 1;
+        mXCenter = (mXStart + mXEnd)/2;
+        mYCenter = (mYStart + mYEnd)/2;
     }
 
     @Override

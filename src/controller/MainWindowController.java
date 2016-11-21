@@ -62,6 +62,20 @@ public class MainWindowController {
         // Initializing Model Tab with ME
         Vector<Pair> imageEs = makeModelGridElements();
 
+        // formula buttons
+        HBox hbButtons = new HBox();
+        hbButtons.setSpacing(10.0);
+        Button buttonRemove = new Button("X");
+        Button buttonLateX = new Button("Entry Formula");
+        hbButtons.getChildren().addAll(buttonLateX, buttonRemove);
+        //buttonRemove.setLayoutX(460);
+        //buttonRemove.setLayoutY(5);
+        innerAnchorPane.getChildren().add(hbButtons);
+        innerAnchorPane.setRightAnchor(hbButtons, 30.0);
+        innerAnchorPane.setTopAnchor(hbButtons, Double.valueOf(formulas.first().getAlignment()) - 15);
+
+        buttonLateX.setOnAction(e -> fillFormulaFromLatexEntry());
+
         for (Pair<ImageView, Expression> pair : imageEs) {
             ImageView imageView = pair.getKey();
             imageView.setOnDragDetected(new EventHandler<MouseEvent>() {
@@ -94,18 +108,7 @@ public class MainWindowController {
                                 mathElement.getYStart(), mathElement.getYEnd())) {
                             drawMathElement(formula.turnColorBackTo(Color.black));
                             if (mathElement.getExpression() instanceof Summation) {
-                                Dialogs dialogs = new Dialogs();
-                                Optional<List<String>> result = dialogs.summationDialog();
-                                result.ifPresent(indexes -> {
-                                    System.out.println("SP=" + indexes.get(0) + ", EP=" + indexes.get(1));
-                                    ((Summation) mathElement.getExpression())
-                                        .setStartingPointFromPrimitives(indexes.get(2), Integer.valueOf(indexes.get(0)));
-                                    ((Summation) mathElement.getExpression())
-                                            .setStoppingPointFromInt(Integer.valueOf(indexes.get(1)));
-                                    drawMathElement(mathElement);
-                                    formula.setLastMathElementModified(mathElement);
-                                    System.out.println(formula);
-                                });
+                                callSummationDialog(formula, mathElement);
                             }
                         }
                     }
@@ -215,6 +218,8 @@ public class MainWindowController {
                     success = true;
                     formulas.first().getMathElement(beingDragged.getXStart()).setColor(Color.black);
                     drawFormula(formulas.first());
+                    if (beingDragged.getExpression() instanceof Summation)
+                        callSummationDialog(formulas.first(), beingDragged);
                     beingDragged = null;
                 }
                 /* let the source know whether the string was successfully
@@ -225,22 +230,35 @@ public class MainWindowController {
             }
         });
 
-
-        HBox hbButtons = new HBox();
-        hbButtons.setSpacing(10.0);
-        Button buttonRemove = new Button("X");
-        Button buttonLateX = new Button("Entry Formula");
-        hbButtons.getChildren().addAll(buttonLateX, buttonRemove);
-        //buttonRemove.setLayoutX(460);
-        //buttonRemove.setLayoutY(5);
-        innerAnchorPane.getChildren().add(hbButtons);
-        innerAnchorPane.setRightAnchor(hbButtons, 30.0);
-        innerAnchorPane.setTopAnchor(hbButtons, Double.valueOf(formulas.first().getAlignment()) - 15);
-
     }
 
     public void closeWindow() {
         mMain.getPrimaryStage().close();
+    }
+
+    private void fillFormulaFromLatexEntry() {
+        Formula formula = getFormula(50);
+        if (null == formula) return;
+        Dialogs dialogs = new Dialogs();
+        Optional<String> result = dialogs.latexEntryDialog();
+        result.ifPresent(name -> {
+            // TODO: parse latex entry and put into the formula
+            System.out.println("Latex Entry: " + name);
+        });
+    }
+
+    private void callSummationDialog(Formula formula, MathElement mathElement) {
+        Dialogs dialogs = new Dialogs();
+        Optional<List<String>> result = dialogs.summationDialog();
+        result.ifPresent(indexes -> {
+            System.out.println("SP=" + indexes.get(0) + ", EP=" + indexes.get(1));
+            ((Summation) mathElement.getExpression())
+                    .setStartingPointFromPrimitives(indexes.get(2), Integer.valueOf(indexes.get(0)));
+            ((Summation) mathElement.getExpression())
+                    .setStoppingPointFromInt(Integer.valueOf(indexes.get(1)));
+            drawMathElement(mathElement);
+            formula.setLastMathElementModified(mathElement);
+        });
     }
 
     private void initializeCanvas() {

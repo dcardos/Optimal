@@ -29,7 +29,6 @@ public class Dialogs {
 
         Optional<String> result = mTextInputDialog.showAndWait();
         return result;
-        //result.ifPresent(name -> System.out.println("Your name: " + name));
     }
 
     public Optional<List<String>> summationDialog() {

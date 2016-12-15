@@ -1,10 +1,13 @@
 package controller;
 
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
@@ -31,6 +34,7 @@ public class MainWindowController {
     private Main mMain;
     private FXGraphics2D g2;
     private TreeSet<Formula> formulas;
+    private Formula lastModifiedFormula;
 
     private MathElement beingDragged;
 
@@ -95,24 +99,56 @@ public class MainWindowController {
             });
         }
 
-        canvas.addEventHandler(MouseEvent.MOUSE_CLICKED,
-                new EventHandler<MouseEvent>() {
-                    @Override
-                    public void handle(MouseEvent t) {
-                        Formula formula = getFormula((int)t.getY());
-                        if (null == formula) return;
-                        MathElement mathElement = formula.getMathElement(((int)t.getX()));
-                        if (null == mathElement) return;
-                        // To be even more precise about the element height
-                        if (Formula.isBetween((int)t.getY(),
-                                mathElement.getYStart(), mathElement.getYEnd())) {
-                            drawMathElement(formula.turnColorBackTo(Color.black));
-                            if (mathElement.getExpression() instanceof Summation) {
-                                callSummationDialog(formula, mathElement);
-                            }
+        // context pop menu
+        final ContextMenu contextMenu = new ContextMenu();
+        MenuItem cut = new MenuItem("Cut");
+        MenuItem copy = new MenuItem("Copy");
+        MenuItem paste = new MenuItem("Paste");
+        MenuItem remove = new MenuItem("Remove");
+        MenuItem cancel = new MenuItem("Cancel");
+        contextMenu.getItems().addAll(cut, copy, paste, remove, cancel);
+        cut.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                System.out.println("cut clicked");
+            }
+        });
+        remove.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                lastModifiedFormula.removeMathElement(lastModifiedFormula.getLastMathElementModified());
+                drawFormula(lastModifiedFormula);
+                lastModifiedFormula.setLastMathElementModified(null);
+                lastModifiedFormula = null;
+            }
+        });
+
+        // left/right click over canvas
+        canvas.setOnMousePressed(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent t) {
+                Formula formula = getFormula((int)t.getY());
+                if (null == formula) return;
+                lastModifiedFormula = formula;
+                MathElement mathElement = formula.getMathElement(((int)t.getX()));
+                if (null == mathElement) return;
+                // right click : context menu
+                if (t.isSecondaryButtonDown()) {
+                    formula.setLastMathElementModified(mathElement);
+                    contextMenu.show(canvas, t.getScreenX(), t.getScreenY());
+                // left click : pop up dialog
+                } else {
+                    // To be even more precise about the element height
+                    if (Formula.isBetween((int) t.getY(),
+                            mathElement.getYStart(), mathElement.getYEnd())) {
+                        drawMathElement(formula.turnColorBackTo(Color.black));
+                        if (mathElement.getExpression() instanceof Summation) {
+                            callSummationDialog(formula, mathElement);
                         }
                     }
-                });
+                }
+            }
+        });
 
         canvas.addEventHandler(MouseEvent.MOUSE_MOVED, new EventHandler<MouseEvent>() {
             @Override

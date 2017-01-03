@@ -139,7 +139,7 @@ public class Formula implements Comparable<Formula>{
     }
 
     public MathElement turnColorBackTo(Color color) {
-        if (mLastMathElementModified != null) {
+        if ((mLastMathElementModified != null)&&(contains(mLastMathElementModified))) {
             if (mLastMathElementModified.getColor() != color) {
                 mLastMathElementModified.setColor(color);
                 mRedFlag = false;
@@ -147,6 +147,14 @@ public class Formula implements Comparable<Formula>{
             }
         }
         return null;
+    }
+
+    public boolean contains(MathElement mathElement){
+        for (MathElement me : mMathElements) {
+            if (me.getId() == mathElement.getId())
+                return true;
+        }
+        return false;
     }
 
     @Override

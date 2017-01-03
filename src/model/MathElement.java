@@ -42,6 +42,19 @@ public class MathElement implements Comparable<MathElement>{
         mColor = Color.black;
     }
 
+    public MathElement(MathElement mathElement, Expression expression) {
+        mId = counter++;
+        mXStart = mathElement.getXStart();
+        mYStart = mathElement.getYStart();
+        mExpression = expression;           // Careful here, can be a reference instead of new expression
+        mXEnd = mathElement.getXEnd();
+        mYEnd = mathElement.getYEnd();
+        mXCenter = mathElement.getXCenter();
+        mYCenter = mathElement.getYCenter();
+        mColor = Color.black;
+        updateIcon(mYCenter);
+    }
+
     public int getId() {
         return mId;
     }
@@ -118,15 +131,17 @@ public class MathElement implements Comparable<MathElement>{
         mColor = color;
     }
 
-    public void updateIcon() {
+    public void updateIcon(int alignment) {
         mTeXFormula = new TeXFormula(mExpression.getLatexExpression());
         mIcon = mTeXFormula.createTeXIcon(TeXConstants.STYLE_DISPLAY, 20);
         mWidth = mIcon.getIconWidth();
         mHeight = mIcon.getIconHeight();
-        mXEnd = mXStart + mWidth - 1;
+        mYStart = alignment - (mHeight/2);
         mYEnd = mYStart + mHeight - 1;
-        mXCenter = (mXStart + mXEnd)/2;
         mYCenter = (mYStart + mYEnd)/2;
+//        If X position changes then all elements should do too
+//        mXEnd = mXStart + mWidth - 1;
+//        mXCenter = (mXStart + mXEnd)/2;
     }
 
     @Override
@@ -157,6 +172,7 @@ public class MathElement implements Comparable<MathElement>{
 
     @Override
     public int compareTo(MathElement o) {
+        System.out.println("Comparing, "+ this + " to " + o);
         return mXStart - o.getXStart();   // sort by x position
     }
 }

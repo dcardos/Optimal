@@ -29,14 +29,17 @@ import java.util.Optional;
 import java.util.TreeSet;
 import java.util.Vector;
 
+import static org.junit.Assert.assertNotNull;
+
 public class MainWindowController {
 
     private Main mMain;
     private FXGraphics2D g2;
+
     private TreeSet<Formula> formulas;
     private Formula lastModifiedFormula;
-
     private MathElement beingDragged;
+    boolean resultFromDialogs;
 
     @FXML private Label labelEditVariable;
 
@@ -93,7 +96,6 @@ public class MainWindowController {
                     ClipboardContent content = new ClipboardContent();
                     content.putString("Is valid");
                     db.setContent(content);
-
                     event.consume();
                 }
             });
@@ -141,7 +143,7 @@ public class MainWindowController {
                     // To be even more precise about the element height
                     if (Formula.isBetween((int) t.getY(),
                             mathElement.getYStart(), mathElement.getYEnd())) {
-                        drawMathElement(formula.turnColorBackTo(Color.black));
+                        drawMathElement(formula.turnColorBackTo(Color.black), formula.getAlignment());
                         if (mathElement.getExpression() instanceof Summation) {
                             callSummationDialog(formula, mathElement);
                         }
@@ -157,23 +159,23 @@ public class MainWindowController {
                 if (null == formula) return;
                 MathElement mathElement = formula.getMathElement(((int)t.getX()));
                 if (null == mathElement) {
-                    drawMathElement(formula.turnColorBackTo(Color.black));
+                    drawMathElement(formula.turnColorBackTo(Color.black), formula.getAlignment());
                     return;
                 }
                 // To be even more precise about the element height
                 if (!Formula.isBetween((int)t.getY(),
                         mathElement.getYStart(), mathElement.getYEnd())) {
-                    drawMathElement(formula.turnColorBackTo(Color.black));
+                    drawMathElement(formula.turnColorBackTo(Color.black), formula.getAlignment());
                     return;
                 }
                 // draw only if necessary
                 if (mathElement.getColor() != Color.red) {
                     if (formula.isRedFlag())
-                        drawMathElement(formula.turnColorBackTo(Color.black));
+                        drawMathElement(formula.turnColorBackTo(Color.black), formula.getAlignment());
                     mathElement.setColor(Color.red);
                     formula.setRedFlag(true);
                     formula.setLastMathElementModified(mathElement);
-                    drawMathElement(mathElement);
+                    drawMathElement(mathElement, formula.getAlignment());
                 }
             }
         });
@@ -199,12 +201,6 @@ public class MainWindowController {
                     if (null == mathElement) {
                         return;
                     }
-                    // To be even more precise about the element height
-//                    if (!Formula.isBetween((int)event.getY(),
-//                            mathElement.getYStart(), mathElement.getYEnd())) {
-//                        drawMathElement(formula.turnColorBackTo(Color.black));
-//                        return;
-//                    }
                     // inside the formula, over a mathElement area
                     if (formula.getLastMathElementModified() != beingDragged) { // first addition
                         formula.addMathElement(beingDragged, mathElement.getXStart());
@@ -252,11 +248,21 @@ public class MainWindowController {
                 if (db.hasString()) {
                     System.out.println("Dragged completed successfully!");
                     success = true;
-                    formulas.first().getMathElement(beingDragged.getXStart()).setColor(Color.black);
-                    drawFormula(formulas.first());
-                    if (beingDragged.getExpression() instanceof Summation)
-                        callSummationDialog(formulas.first(), beingDragged);
+                    // TODO: fix for any formula
+                    formulas.first().removeMathElement(beingDragged);
+                    Summation summation = null;
+                    MathElement mathElement = null;
+                    if (beingDragged.getExpression() instanceof Summation) {
+                        summation = new Summation();
+                        mathElement = new MathElement(beingDragged, summation);
+                    }
+                    assertNotNull(mathElement);
+                    assertNotNull(summation);
+                    // TODO: other instances
+                    if (mathElement.getExpression() instanceof Summation)
+                        callSummationDialog(formulas.first(), mathElement);
                     beingDragged = null;
+                    drawFormula(formulas.first());
                 }
                 /* let the source know whether the string was successfully
                  * transferred and used */
@@ -286,15 +292,21 @@ public class MainWindowController {
     private void callSummationDialog(Formula formula, MathElement mathElement) {
         Dialogs dialogs = new Dialogs();
         Optional<List<String>> result = dialogs.summationDialog();
+        resultFromDialogs = false;
         result.ifPresent(indexes -> {
-            System.out.println("SP=" + indexes.get(0) + ", EP=" + indexes.get(1));
-            ((Summation) mathElement.getExpression())
-                    .setStartingPointFromPrimitives(indexes.get(2), Integer.valueOf(indexes.get(0)));
-            ((Summation) mathElement.getExpression())
-                    .setStoppingPointFromInt(Integer.valueOf(indexes.get(1)));
-            drawMathElement(mathElement);
-            formula.setLastMathElementModified(mathElement);
+            resultFromDialogs = true;
         });
+        if (resultFromDialogs) {
+            List<String> inputs = result.get();
+            ((Summation) mathElement.getExpression())
+                    .setStartingPointFromPrimitives(inputs.get(2), Integer.valueOf(inputs.get(0)));
+            ((Summation) mathElement.getExpression())
+                    .setStoppingPointFromInt(Integer.valueOf(inputs.get(1)));
+            formulas.first().addMathElement(mathElement, mathElement.getXStart());
+            formula.setLastMathElementModified(mathElement);
+        } else {
+            System.out.println("User cancelled the input");
+        }
     }
 
     private void initializeCanvas() {
@@ -308,29 +320,27 @@ public class MainWindowController {
     }
 
     private void drawFormula(Formula formula) {
-//        To clear canvas:
-        double width = canvas.getWidth();
-        double height = canvas.getHeight();
-        canvas.getGraphicsContext2D().clearRect(0, 0, width, height);
+        clearCanvas();
 
         for (MathElement mathElement : formula.getMathElements()) {
             // now create an actual image of the rendered equation
-            drawMathElement(mathElement);
+            drawMathElement(mathElement, formula.getAlignment());
         }
     }
 
-    private void drawMathElement(MathElement mathElement) {
+    private void drawMathElement(MathElement mathElement, int alignment) {
         if (mathElement == null) return;
-        mathElement.updateIcon();
-//        To clear canvas:
-//        double width = canvas.getWidth();
-//        double height = canvas.getHeight();
-//        canvas.getGraphicsContext2D().clearRect(0, 0, width, height);
-
+        mathElement.updateIcon(alignment);
         BufferedImage image = prepareToDrawME(mathElement);
 
         // at this point the image is created, you could also save it with ImageIO
         this.g2.drawImage(image, mathElement.getXStart(), mathElement.getYStart(), null);
+    }
+
+    private void clearCanvas() {
+        double width = canvas.getWidth();
+        double height = canvas.getHeight();
+        canvas.getGraphicsContext2D().clearRect(0, 0, width, height);
     }
 
     private Vector<Pair> makeModelGridElements() {

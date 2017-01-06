@@ -5,6 +5,10 @@ import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import model.Formula;
+import model.MathElement;
+import model.math.Constant;
+import model.math.Summation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +23,7 @@ public class Dialogs {
     private TextInputDialog mTextInputDialog;
     private boolean mFlag1;
     private boolean mFlag2;
+    private boolean resultFromDialogs;
 
     public Optional<String> latexEntryDialog() {
         mTextInputDialog = new TextInputDialog("Enter LateX formula:");
@@ -108,5 +113,51 @@ public class Dialogs {
         Optional<List<String>> result = mDialog.showAndWait();
 
         return result;
+    }
+
+    public Optional<String> constantDialog() {
+        mTextInputDialog = new TextInputDialog("Enter the number:");
+
+        mTextInputDialog.setTitle("Number entry");
+        mTextInputDialog.setHeaderText("Please, enter the desired number");
+        mTextInputDialog.setContentText("number here");
+
+        return mTextInputDialog.showAndWait();
+    }
+
+    public boolean callSummationDialog(Formula formula, MathElement mathElement) {
+        Optional<List<String>> result = summationDialog();
+        resultFromDialogs = false;
+        result.ifPresent(indexes -> {
+            resultFromDialogs = true;
+        });
+        if (resultFromDialogs) {
+            List<String> inputs = result.get();
+            ((Summation) mathElement.getExpression())
+                    .setStartingPointFromPrimitives(inputs.get(2), Integer.valueOf(inputs.get(0)));
+            ((Summation) mathElement.getExpression())
+                    .setStoppingPointFromInt(Integer.valueOf(inputs.get(1)));
+            formula.setLastMathElementModified(mathElement);
+            mathElement.updateIcon(formula.getAlignment());
+        } else {
+            System.out.println("User cancelled the input summation");
+        }
+        return resultFromDialogs;
+    }
+
+    public boolean callConstantDialog(Formula formula, MathElement mathElement) {
+        Optional<String> result = constantDialog();
+        resultFromDialogs = false;
+        result.ifPresent(indexes -> {
+            resultFromDialogs = true;
+        });
+        if (resultFromDialogs) {
+            ((Constant)mathElement.getExpression()).setFloat(Float.valueOf(result.get()));
+            formula.setLastMathElementModified(mathElement);
+            mathElement.updateIcon(formula.getAlignment());
+        } else {
+            System.out.println("User cancelled the input number");
+        }
+        return resultFromDialogs;
     }
 }

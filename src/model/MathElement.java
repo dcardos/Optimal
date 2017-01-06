@@ -172,7 +172,6 @@ public class MathElement implements Comparable<MathElement>{
 
     @Override
     public int compareTo(MathElement o) {
-        System.out.println("Comparing, "+ this + " to " + o);
         return mXStart - o.getXStart();   // sort by x position
     }
 }

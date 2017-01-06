@@ -24,12 +24,9 @@ import org.jfree.fx.FXGraphics2D;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.List;
 import java.util.Optional;
 import java.util.TreeSet;
 import java.util.Vector;
-
-import static org.junit.Assert.assertNotNull;
 
 public class MainWindowController {
 
@@ -144,9 +141,13 @@ public class MainWindowController {
                     if (Formula.isBetween((int) t.getY(),
                             mathElement.getYStart(), mathElement.getYEnd())) {
                         drawMathElement(formula.turnColorBackTo(Color.black), formula.getAlignment());
+                        Dialogs dialogs = new Dialogs();
                         if (mathElement.getExpression() instanceof Summation) {
-                            callSummationDialog(formula, mathElement);
+                            dialogs.callSummationDialog(formula, mathElement);
+                        } else if (mathElement.getExpression() instanceof Constant) {
+                            dialogs.callConstantDialog(formula, mathElement);
                         }
+                        drawFormula(formula);
                     }
                 }
             }
@@ -250,17 +251,38 @@ public class MainWindowController {
                     success = true;
                     // TODO: fix for any formula
                     formulas.first().removeMathElement(beingDragged);
-                    Summation summation = null;
                     MathElement mathElement = null;
-                    if (beingDragged.getExpression() instanceof Summation) {
-                        summation = new Summation();
-                        mathElement = new MathElement(beingDragged, summation);
-                    }
-                    assertNotNull(mathElement);
-                    assertNotNull(summation);
+                    Dialogs dialogs = new Dialogs();
                     // TODO: other instances
-                    if (mathElement.getExpression() instanceof Summation)
-                        callSummationDialog(formulas.first(), mathElement);
+                    boolean addME = true;
+                    if (beingDragged.getExpression() instanceof Summation) {
+                        Summation summation = new Summation();
+                        mathElement = new MathElement(beingDragged, summation);
+                        if (!dialogs.callSummationDialog(formulas.first(), mathElement))
+                            addME = false;
+                    } else if (beingDragged.getExpression() instanceof Constant) {
+                        Constant constant = new Constant();
+                        mathElement = new MathElement(beingDragged, constant);
+                        if (!dialogs.callConstantDialog(formulas.first(), mathElement))
+                            addME = false;
+                    } else if (beingDragged.getExpression() instanceof Sum) {
+                        Sum sum = new Sum();
+                        mathElement = new MathElement(beingDragged, sum);
+                    } else if (beingDragged.getExpression() instanceof Subtraction) {
+                        Subtraction subtraction = new Subtraction();
+                        mathElement = new MathElement(beingDragged, subtraction);
+                    } else if (beingDragged.getExpression() instanceof LessOrEqual) {
+                        LessOrEqual lessOrEqual = new LessOrEqual();
+                        mathElement = new MathElement(beingDragged, lessOrEqual);
+                    } else if (beingDragged.getExpression() instanceof GreaterOrEqual) {
+                        GreaterOrEqual greaterOrEqual = new GreaterOrEqual();
+                        mathElement = new MathElement(beingDragged, greaterOrEqual);
+                    } else if (beingDragged.getExpression() instanceof Equal) {
+                        Equal equal = new Equal();
+                        mathElement = new MathElement(beingDragged, equal);
+                    }
+                    if (addME)
+                        formulas.first().addMathElement(mathElement, mathElement.getXStart());
                     beingDragged = null;
                     drawFormula(formulas.first());
                 }
@@ -289,25 +311,7 @@ public class MainWindowController {
         });
     }
 
-    private void callSummationDialog(Formula formula, MathElement mathElement) {
-        Dialogs dialogs = new Dialogs();
-        Optional<List<String>> result = dialogs.summationDialog();
-        resultFromDialogs = false;
-        result.ifPresent(indexes -> {
-            resultFromDialogs = true;
-        });
-        if (resultFromDialogs) {
-            List<String> inputs = result.get();
-            ((Summation) mathElement.getExpression())
-                    .setStartingPointFromPrimitives(inputs.get(2), Integer.valueOf(inputs.get(0)));
-            ((Summation) mathElement.getExpression())
-                    .setStoppingPointFromInt(Integer.valueOf(inputs.get(1)));
-            formulas.first().addMathElement(mathElement, mathElement.getXStart());
-            formula.setLastMathElementModified(mathElement);
-        } else {
-            System.out.println("User cancelled the input");
-        }
-    }
+
 
     private void initializeCanvas() {
         this.g2 = new FXGraphics2D(canvas.getGraphicsContext2D());
@@ -321,7 +325,7 @@ public class MainWindowController {
 
     private void drawFormula(Formula formula) {
         clearCanvas();
-
+        formula.correctIndexes();
         for (MathElement mathElement : formula.getMathElements()) {
             // now create an actual image of the rendered equation
             drawMathElement(mathElement, formula.getAlignment());

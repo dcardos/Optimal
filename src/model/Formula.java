@@ -1,7 +1,7 @@
 package model;
 
 import java.awt.*;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * Created by Danilo on 29/09/2016.
@@ -86,7 +86,10 @@ public class Formula implements Comparable<Formula>{
     }
 
     public void setLastMathElementModified(MathElement lastMathElementModified) {
-        mLastMathElementModified = lastMathElementModified;
+        if ((lastMathElementModified != null)&&(contains(lastMathElementModified)))
+            mLastMathElementModified = lastMathElementModified;
+        else
+            mLastMathElementModified = null;
     }
 
     public TreeSet<MathElement> getMathElements() {
@@ -122,7 +125,7 @@ public class Formula implements Comparable<Formula>{
     public void addMathElement(MathElement mathElement, int xPosition) {
         mathElement.setXStart(xPosition);
         mathElement.setYStart(mAlignment - mathElement.getHeight()/2);
-        if (xPosition != mXStart +mWidth)     // if it will be added in the middle then update indexes
+        if (xPosition != mXStart + mWidth)     // if it will be added in the middle then update indexes
             updateIndexes(mathElement, false);
         mWidth = mWidth + mathElement.getWidth();
         mMathElements.add(mathElement);
@@ -146,6 +149,7 @@ public class Formula implements Comparable<Formula>{
                 return mLastMathElementModified;
             }
         }
+        mLastMathElementModified = null;
         return null;
     }
 
@@ -207,6 +211,21 @@ public class Formula implements Comparable<Formula>{
                 mathElement.setXStart(mathElement.getXStart() + mathElementInQuestion.getWidth());
             }   // for addition remembers that it will be added at the same position of an existing element
         }
+    }
 
+    public void correctIndexes() {
+        Queue<MathElement> queue = new LinkedList<>();
+        for (MathElement mathElement : mMathElements) {
+            queue.add(mathElement);
+        }
+        mMathElements.clear();
+        int nextXPosition = mXStart;
+        int size = queue.size();
+        for (int i=0; i<size; i++) {
+            MathElement head = queue.remove();
+            head.setXStart(nextXPosition);
+            nextXPosition += head.getWidth();
+            mMathElements.add(head);
+        }
     }
 }

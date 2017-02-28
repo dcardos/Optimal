@@ -130,6 +130,7 @@ public class Formula implements Comparable<Formula>{
         mWidth = mWidth + mathElement.getWidth();
         mMathElements.add(mathElement);
         assert(mMathElements.contains(mathElement));
+        mXEnd = mXStart + mWidth;
     }
 
     public boolean removeMathElement(MathElement mathElement) {

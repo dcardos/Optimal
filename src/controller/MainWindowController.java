@@ -14,6 +14,7 @@ import javafx.scene.image.WritableImage;
 import javafx.scene.input.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.text.TextAlignment;
 import javafx.util.Pair;
 import model.Formula;
 import model.MathElement;
@@ -325,6 +326,16 @@ public class MainWindowController {
 
     private void drawFormula(Formula formula) {
         clearCanvas();
+
+        // Setting text
+        int textXPos = 10;
+        canvas.getGraphicsContext2D().setTextAlign(TextAlignment.LEFT);
+        canvas.getGraphicsContext2D().setFont(new javafx.scene.text.Font("Calibri", 18));
+        canvas.getGraphicsContext2D().fillText("Main Function", textXPos, formulas.first().getYStart() - 10);
+        canvas.getGraphicsContext2D().strokeLine(10, formulas.first().getYEnd() + 10,
+                canvas.getWidth() - 10, formulas.first().getYEnd() + 10);
+        canvas.getGraphicsContext2D().fillText("Constraints", textXPos, formulas.first().getYEnd() + 30);
+
         formula.correctIndexes();
         for (MathElement mathElement : formula.getMathElements()) {
             // now create an actual image of the rendered equation

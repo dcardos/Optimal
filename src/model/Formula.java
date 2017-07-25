@@ -1,5 +1,7 @@
 package model;
 
+import controller.FormulasPositionSet;
+
 import java.awt.*;
 import java.util.*;
 
@@ -7,7 +9,6 @@ import java.util.*;
  * Created by Danilo on 29/09/2016.
  */
 public class Formula implements Comparable<Formula>{
-    private static final Integer defaultHeight = 80;
     private static int counter = 0;
     private int mId;
     private int mXStart;
@@ -27,7 +28,7 @@ public class Formula implements Comparable<Formula>{
         mXStart = xStart == 0 ? 30 : xStart;    // adding margin if necessary
         mYStart = yStart;
         mWidth = 0;
-        mHeight = defaultHeight;
+        mHeight = FormulasPositionSet.mDefaultHeight;
         mAlignment = (mHeight/2) + mYStart;
         mMainFunction = mainFunction;
         mMathElements = new TreeSet<>();
@@ -119,7 +120,11 @@ public class Formula implements Comparable<Formula>{
     }
 
     public void addMathElementAtTheEnd(MathElement mathElement) {
-        addMathElement(mathElement, mXStart +mWidth);
+        addMathElement(mathElement, mXStart + mWidth);
+    }
+
+    public void addMathElementAtTheBeginning(MathElement mathElement) {
+        addMathElement(mathElement, mXStart);
     }
 
     public void addMathElement(MathElement mathElement, int xPosition) {
@@ -173,7 +178,7 @@ public class Formula implements Comparable<Formula>{
 
         stringBuilder.append("Formula:")
                 .append(System.getProperty("line.separator"));
-        stringBuilder.append("defaultHeight = " + defaultHeight)
+        stringBuilder.append("defaultHeight = " + FormulasPositionSet.mDefaultHeight)
                 .append(System.getProperty("line.separator"));
         stringBuilder.append("counter = " + counter)
                 .append(System.getProperty("line.separator"));
@@ -198,8 +203,8 @@ public class Formula implements Comparable<Formula>{
         return stringBuilder.toString();
     }
 
-    public static boolean isBetween(int x, int lower, int upper) {
-        return (lower <= x) && (x <= upper);
+    public static boolean isBetween(int pos, int lower, int upper) {
+        return (lower <= pos) && (pos <= upper);
     }
 
     private void updateIndexes(MathElement mathElementInQuestion, boolean removed){

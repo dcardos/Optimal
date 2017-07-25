@@ -1,17 +1,18 @@
 package controller;
 
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
-import javafx.scene.control.ContextMenu;
+import javafx.scene.control.*;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
-import javafx.scene.input.*;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.TextAlignment;
@@ -36,16 +37,17 @@ public class MainWindowController {
 
     private TreeSet<Formula> formulas;
     private Formula lastModifiedFormula;
+    private Formula newConstraint;
     private MathElement beingDragged;
-    boolean resultFromDialogs;
+    private boolean flagNewConstraint = false;
+    private final ToggleGroup mMaxMin = new ToggleGroup();
 
     @FXML private Label labelEditVariable;
-
     @FXML private Canvas canvas;
-
     @FXML private AnchorPane innerAnchorPane;
-
     @FXML private AnchorPane anchorPaneModel;
+    @FXML private RadioButton rdBtnMax;
+    @FXML private RadioButton rdBtnMin;
 
     public void setMain(Main main) {
         mMain = main;
@@ -60,14 +62,34 @@ public class MainWindowController {
 
         // Initializing formulas
         this.formulas = new TreeSet<>();
+        Formula mainFormula = new Formula(FormulasPositionSet.mMainFormulaStartXPosition,
+                FormulasPositionSet.mMainFormulaStartYPosition, true);
+        formulas.add(mainFormula);
+        Formula firstConstraint = new Formula(FormulasPositionSet.mConstraintStartXPosition,
+                FormulasPositionSet.mFirstConstraintStartYPosition, false);
+        formulas.add(firstConstraint);
 
         // Initializing canvas
-        initializeCanvas();
+        this.g2 = new FXGraphics2D(canvas.getGraphicsContext2D());
+        setFormulaLabels();
+        // formulas.add(testFormula());
+        // drawFormula(formulas.first());
+        // Redraw canvas when size changes.
+        // canvas.widthProperty().addListener(evt -> drawFormula());
+        // canvas.heightProperty().addListener(evt -> drawFormula());
+
+        // Initializing radio buttons
+        rdBtnMax.setToggleGroup(mMaxMin);
+        rdBtnMin.setToggleGroup(mMaxMin);
+
+        // Initializing "add formula" labels
+
 
         // Initializing Model Tab with ME
         Vector<Pair> imageEs = makeModelGridElements();
 
-        // formula buttons
+        // Main formula buttons
+        // TODO for every formula (put on formula class?)
         HBox hbButtons = new HBox();
         hbButtons.setSpacing(10.0);
         Button buttonRemove = new Button("X");
@@ -75,27 +97,24 @@ public class MainWindowController {
         hbButtons.getChildren().addAll(buttonLateX, buttonRemove);
         //buttonRemove.setLayoutX(460);
         //buttonRemove.setLayoutY(5);
-        innerAnchorPane.getChildren().add(hbButtons);
-        innerAnchorPane.setRightAnchor(hbButtons, 30.0);
-        innerAnchorPane.setTopAnchor(hbButtons, Double.valueOf(formulas.first().getAlignment()) - 15);
+//        innerAnchorPane.getChildren().add(hbButtons);
+//        AnchorPane.setRightAnchor(hbButtons, FormulasPositionSet.mMainFormulaStartYPosition);
+//        AnchorPane.setTopAnchor(hbButtons, formulas.first().getAlignment() - 15.0);
 
         buttonLateX.setOnAction(e -> fillFormulaFromLatexEntry());
 
         for (Pair<ImageView, Expression> pair : imageEs) {
             ImageView imageView = pair.getKey();
-            imageView.setOnDragDetected(new EventHandler<MouseEvent>() {
-                @Override
-                public void handle(MouseEvent event) {
-                /* drag was detected, start a drag-and-drop gesture*/
-                /* allow any transfer mode */
-                    Dragboard db = imageView.startDragAndDrop(TransferMode.ANY);
-                /* Put a String on a drag board */
-                    beingDragged = new MathElement(pair.getValue());
-                    ClipboardContent content = new ClipboardContent();
-                    content.putString("Is valid");
-                    db.setContent(content);
-                    event.consume();
-                }
+            imageView.setOnDragDetected(event -> {
+            /* drag was detected, start a drag-and-drop gesture*/
+            /* allow any transfer mode */
+                Dragboard db = imageView.startDragAndDrop(TransferMode.ANY);
+            /* Put a String on a drag board */
+                beingDragged = new MathElement(pair.getValue());
+                ClipboardContent content = new ClipboardContent();
+                content.putString("Is valid");
+                db.setContent(content);
+                event.consume();
             });
         }
 
@@ -107,192 +126,206 @@ public class MainWindowController {
         MenuItem remove = new MenuItem("Remove");
         MenuItem cancel = new MenuItem("Cancel");
         contextMenu.getItems().addAll(cut, copy, paste, remove, cancel);
-        cut.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                System.out.println("cut clicked");
-            }
-        });
-        remove.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                lastModifiedFormula.removeMathElement(lastModifiedFormula.getLastMathElementModified());
-                drawFormula(lastModifiedFormula);
-                lastModifiedFormula.setLastMathElementModified(null);
-                lastModifiedFormula = null;
-            }
+        cut.setOnAction(event -> System.out.println("cut clicked"));
+        remove.setOnAction(event -> {
+            lastModifiedFormula.removeMathElement(lastModifiedFormula.getLastMathElementModified());
+            drawFormula(lastModifiedFormula);
+            lastModifiedFormula.setLastMathElementModified(null);
+            lastModifiedFormula = null;
         });
 
         // left/right click over canvas
-        canvas.setOnMousePressed(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent t) {
-                Formula formula = getFormula((int)t.getY());
-                if (null == formula) return;
-                lastModifiedFormula = formula;
-                MathElement mathElement = formula.getMathElement(((int)t.getX()));
-                if (null == mathElement) return;
-                // right click : context menu
-                if (t.isSecondaryButtonDown()) {
-                    formula.setLastMathElementModified(mathElement);
-                    contextMenu.show(canvas, t.getScreenX(), t.getScreenY());
-                // left click : pop up dialog
-                } else {
-                    // To be even more precise about the element height
-                    if (Formula.isBetween((int) t.getY(),
-                            mathElement.getYStart(), mathElement.getYEnd())) {
-                        drawMathElement(formula.turnColorBackTo(Color.black), formula.getAlignment());
-                        Dialogs dialogs = new Dialogs();
-                        if (mathElement.getExpression() instanceof Summation) {
-                            dialogs.callSummationDialog(formula, mathElement);
-                        } else if (mathElement.getExpression() instanceof Constant) {
-                            dialogs.callConstantDialog(formula, mathElement);
-                        }
-                        drawFormula(formula);
-                    }
-                }
-            }
-        });
-
-        canvas.addEventHandler(MouseEvent.MOUSE_MOVED, new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent t) {
-                Formula formula = getFormula((int)t.getY());
-                if (null == formula) return;
-                MathElement mathElement = formula.getMathElement(((int)t.getX()));
-                if (null == mathElement) {
-                    drawMathElement(formula.turnColorBackTo(Color.black), formula.getAlignment());
-                    return;
-                }
+        canvas.setOnMousePressed(t -> {
+            Formula formula = getFormula((int)t.getY());
+            if (null == formula) return;
+            lastModifiedFormula = formula;
+            MathElement mathElement = formula.getMathElement(((int)t.getX()));
+            if (null == mathElement) return;
+            // right click : context menu
+            if (t.isSecondaryButtonDown()) {
+                formula.setLastMathElementModified(mathElement);
+                contextMenu.show(canvas, t.getScreenX(), t.getScreenY());
+            // left click : pop up dialog
+            } else {
                 // To be even more precise about the element height
-                if (!Formula.isBetween((int)t.getY(),
+                if (Formula.isBetween((int) t.getY(),
                         mathElement.getYStart(), mathElement.getYEnd())) {
                     drawMathElement(formula.turnColorBackTo(Color.black), formula.getAlignment());
-                    return;
-                }
-                // draw only if necessary
-                if (mathElement.getColor() != Color.red) {
-                    if (formula.isRedFlag())
-                        drawMathElement(formula.turnColorBackTo(Color.black), formula.getAlignment());
-                    mathElement.setColor(Color.red);
-                    formula.setRedFlag(true);
-                    formula.setLastMathElementModified(mathElement);
-                    drawMathElement(mathElement, formula.getAlignment());
+                    Dialogs dialogs = new Dialogs();
+                    if (mathElement.getExpression() instanceof Summation) {
+                        dialogs.callSummationDialog(formula, mathElement);
+                    } else if (mathElement.getExpression() instanceof Constant) {
+                        dialogs.callConstantDialog(formula, mathElement);
+                    }
+                    drawFormula(formula);
                 }
             }
         });
 
-        canvas.setOnDragOver(new EventHandler<DragEvent>() {
-            @Override
-            public void handle(DragEvent event) {
-                /* data is dragged over the target */
-                /* accept it only if it is not dragged from the same node
-                 * and if it has a string data */
-                if (event.getGestureSource() != canvas &&
-                        event.getDragboard().hasString()) {
-                    /* allow for both copying and moving, whatever user chooses */
-                    event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+        // when you are hovering the mouse over the math elements - turn them red
+        canvas.addEventHandler(MouseEvent.MOUSE_MOVED, t -> {
+            Formula formula = getFormula((int)t.getY());
+            if (null == formula) return;
+            MathElement mathElement = formula.getMathElement(((int)t.getX()));
+            if (null == mathElement) {
+                drawMathElement(formula.turnColorBackTo(Color.black), formula.getAlignment());
+                return;
+            }
+            // To be even more precise about the element height
+            if (!Formula.isBetween((int)t.getY(),
+                    mathElement.getYStart(), mathElement.getYEnd())) {
+                drawMathElement(formula.turnColorBackTo(Color.black), formula.getAlignment());
+                return;
+            }
+            // draw only if necessary
+            if (mathElement.getColor() != Color.red) {
+                if (formula.isRedFlag())
+                    drawMathElement(formula.turnColorBackTo(Color.black), formula.getAlignment());
+                mathElement.setColor(Color.red);
+                formula.setRedFlag(true);
+                formula.setLastMathElementModified(mathElement);
+                drawMathElement(mathElement, formula.getAlignment());
+            }
+        });
 
-                    /* Add a mock element */
+        // when dragging math elements to the canvas
+        canvas.setOnDragOver(event -> {
+            /* data is dragged over the target */
+            /* accept it only if it is not dragged from the same node
+             * and if it has a string data */
+            if (event.getGestureSource() != canvas &&
+                    event.getDragboard().hasString()) {
+                /* allow for both copying and moving, whatever user chooses */
+                event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+
+                /* Add a mock element */
 //                    System.out.println("data is dragged over the canvas");
-                    assert (null != beingDragged);
-                    beingDragged.setColor(Color.gray);
-                    Formula formula = getFormula((int)event.getY());
-                    if (null == formula) return;
-                    MathElement mathElement = formula.getMathElement(((int)event.getX()));
+                assert (null != beingDragged);
+                beingDragged.setColor(Color.gray);
+                Formula formula = getFormula((int)event.getY());
+                if (null == formula) return;
+                MathElement mathElement = formula.getMathElement(((int)event.getX()));
+                // inside the formula, over a mathElement area
+                if (formula.getLastMathElementModified() != beingDragged) { // first addition
+                    // TODO: fix for first constraint
+                    if (null == mathElement && formula.getMathElements().isEmpty()) {
+                        formula.addMathElementAtTheBeginning(beingDragged);
+                        if (!flagNewConstraint && formula == formulas.last()) {   // preparing area for next constraint
+                            newConstraint = new Formula(FormulasPositionSet.mConstraintStartXPosition,
+                                    FormulasPositionSet.mFirstConstraintStartYPosition +
+                                            (formulas.size() - 1)*
+                                    (FormulasPositionSet.mDefaultHeight+FormulasPositionSet.mVerticalSpaceBetweenConstraints),
+                                    false);
+                            formulas.add(newConstraint);
+                            flagNewConstraint = true;
+                        }
+                    } else if (null != mathElement) {
+                        formula.addMathElement(beingDragged, mathElement.getXStart());
+                    }
+                    formula.setLastMathElementModified(beingDragged);
+                    drawFormula(formula);
+                } else {
                     if (null == mathElement) {
                         return;
                     }
-                    // inside the formula, over a mathElement area
-                    if (formula.getLastMathElementModified() != beingDragged) { // first addition
-                        formula.addMathElement(beingDragged, mathElement.getXStart());
-                        formula.setLastMathElementModified(beingDragged);
-                        drawFormula(formula);
-                    } else {
 //                        System.out.println("Current x: " + event.getX() + "ME X Start: " + mathElement.getXStart());
-                        if (mathElement.getXStart() < beingDragged.getXStart()
-                                && event.getX() <= mathElement.getXCenter()) { // moving left
-                            formula.removeMathElement(beingDragged);
-                            formula.addMathElement(beingDragged, mathElement.getXStart());
-                            drawFormula(formula);
-                        } else if (mathElement.getXStart() >= beingDragged.getXEnd() &&
-                                event.getX() > mathElement.getXCenter()) {    // moving right
-                            formula.removeMathElement(beingDragged);
-                            formula.addMathElement(beingDragged, mathElement.getXEnd());
-                            drawFormula(formula);
-                        }
+                    if (mathElement.getXStart() < beingDragged.getXStart()
+                            && event.getX() <= mathElement.getXCenter()) { // moving left
+                        formula.removeMathElement(beingDragged);
+                        formula.addMathElement(beingDragged, mathElement.getXStart());
+                        drawFormula(formula);
+                    } else if (mathElement.getXStart() >= beingDragged.getXEnd() &&
+                            event.getX() > mathElement.getXCenter()) {    // moving right
+                        formula.removeMathElement(beingDragged);
+                        formula.addMathElement(beingDragged, mathElement.getXEnd());
+                        drawFormula(formula);
                     }
                 }
-                event.consume();
+                lastModifiedFormula = formula;
             }
+            event.consume();
         });
 
-        canvas.setOnDragExited(new EventHandler<DragEvent>() {
-            @Override
-            public void handle(DragEvent event) {
-                // TODO: fix that for any formula
-                if (!event.isDropCompleted()) {
-                    System.out.println("Dragged did not completed");
-                    formulas.first().removeMathElement(beingDragged);
-                    drawFormula(formulas.first());
-                    beingDragged = null;
+        canvas.setOnDragExited(event -> {
+            if (!event.isDropCompleted()) {
+                System.out.println("Dragged did not completed");
+                lastModifiedFormula.removeMathElement(beingDragged);
+                if (lastModifiedFormula.getMathElements().isEmpty() && !lastModifiedFormula.isMainFunction()) {
+                    formulas.remove(newConstraint);
+                    newConstraint = null;
+                    flagNewConstraint = false;
                 }
-                event.consume();
+                drawFormula(lastModifiedFormula);
+                beingDragged = null;
             }
+            event.consume();
         });
 
-        canvas.setOnDragDropped(new EventHandler<DragEvent>() {
-            public void handle(DragEvent event) {
-                /* data dropped */
-                /* if there is a string data on dragboard, read it and use it */
-                Dragboard db = event.getDragboard();
-                boolean success = false;
-                if (db.hasString()) {
-                    System.out.println("Dragged completed successfully!");
-                    success = true;
-                    // TODO: fix for any formula
-                    formulas.first().removeMathElement(beingDragged);
-                    MathElement mathElement = null;
-                    Dialogs dialogs = new Dialogs();
-                    // TODO: other instances
-                    boolean addME = true;
-                    if (beingDragged.getExpression() instanceof Summation) {
-                        Summation summation = new Summation();
-                        mathElement = new MathElement(beingDragged, summation);
-                        if (!dialogs.callSummationDialog(formulas.first(), mathElement))
-                            addME = false;
-                    } else if (beingDragged.getExpression() instanceof Constant) {
-                        Constant constant = new Constant();
-                        mathElement = new MathElement(beingDragged, constant);
-                        if (!dialogs.callConstantDialog(formulas.first(), mathElement))
-                            addME = false;
-                    } else if (beingDragged.getExpression() instanceof Sum) {
-                        Sum sum = new Sum();
-                        mathElement = new MathElement(beingDragged, sum);
-                    } else if (beingDragged.getExpression() instanceof Subtraction) {
-                        Subtraction subtraction = new Subtraction();
-                        mathElement = new MathElement(beingDragged, subtraction);
-                    } else if (beingDragged.getExpression() instanceof LessOrEqual) {
-                        LessOrEqual lessOrEqual = new LessOrEqual();
-                        mathElement = new MathElement(beingDragged, lessOrEqual);
-                    } else if (beingDragged.getExpression() instanceof GreaterOrEqual) {
-                        GreaterOrEqual greaterOrEqual = new GreaterOrEqual();
-                        mathElement = new MathElement(beingDragged, greaterOrEqual);
-                    } else if (beingDragged.getExpression() instanceof Equal) {
-                        Equal equal = new Equal();
-                        mathElement = new MathElement(beingDragged, equal);
+        canvas.setOnDragDropped(event -> {
+            /* data dropped */
+            /* if there is a string data on dragboard, read it and use it */
+            Dragboard db = event.getDragboard();
+            boolean success = false;
+            if (db.hasString()) {
+                System.out.println("Dragged completed successfully!");
+                success = true;
+                if (lastModifiedFormula == null) {
+                    System.out.println("lastModifiedFormula == null!");
+                    return;
+                }
+                lastModifiedFormula.removeMathElement(beingDragged);
+                MathElement mathElement = null;
+                Dialogs dialogs = new Dialogs();
+                // TODO: other instances
+                boolean addME = true;
+                if (beingDragged.getExpression() instanceof Summation) {
+                    Summation summation = new Summation();
+                    mathElement = new MathElement(beingDragged, summation);
+                    if (!dialogs.callSummationDialog(formulas.first(), mathElement))
+                        addME = false;
+                } else if (beingDragged.getExpression() instanceof Constant) {
+                    Constant constant = new Constant();
+                    mathElement = new MathElement(beingDragged, constant);
+                    if (!dialogs.callConstantDialog(formulas.first(), mathElement))
+                        addME = false;
+                } else if (beingDragged.getExpression() instanceof Sum) {
+                    Sum sum = new Sum();
+                    mathElement = new MathElement(beingDragged, sum);
+                } else if (beingDragged.getExpression() instanceof Subtraction) {
+                    Subtraction subtraction = new Subtraction();
+                    mathElement = new MathElement(beingDragged, subtraction);
+                } else if (beingDragged.getExpression() instanceof LessOrEqual) {
+                    LessOrEqual lessOrEqual = new LessOrEqual();
+                    mathElement = new MathElement(beingDragged, lessOrEqual);
+                } else if (beingDragged.getExpression() instanceof GreaterOrEqual) {
+                    GreaterOrEqual greaterOrEqual = new GreaterOrEqual();
+                    mathElement = new MathElement(beingDragged, greaterOrEqual);
+                } else if (beingDragged.getExpression() instanceof Equal) {
+                    Equal equal = new Equal();
+                    mathElement = new MathElement(beingDragged, equal);
+                } else if (beingDragged.getExpression() instanceof OpenParenthesis) {
+                    OpenParenthesis openParenthesis = new OpenParenthesis();
+                    mathElement = new MathElement(beingDragged, openParenthesis);
+                } else if (beingDragged.getExpression() instanceof CloseParenthesis) {
+                    CloseParenthesis closeParenthesis = new CloseParenthesis();
+                    mathElement = new MathElement(beingDragged, closeParenthesis);
+                }
+                if (addME) {
+                    try {
+                        lastModifiedFormula.addMathElement(mathElement, mathElement.getXStart());
+                    } catch (NullPointerException e) {
+                        System.out.printf("Invalid MathElement or its X start position");
+                        e.printStackTrace();
                     }
-                    if (addME)
-                        formulas.first().addMathElement(mathElement, mathElement.getXStart());
-                    beingDragged = null;
-                    drawFormula(formulas.first());
                 }
-                /* let the source know whether the string was successfully
-                 * transferred and used */
-                event.setDropCompleted(success);
-
-                event.consume();
+                beingDragged = null;
+                drawFormula(formulas.first());
             }
+            /* let the source know whether the string was successfully
+             * transferred and used */
+            event.setDropCompleted(success);
+
+            event.consume();
         });
 
     }
@@ -312,29 +345,34 @@ public class MainWindowController {
         });
     }
 
+    private void setFormulaLabels() {
+        int textXPos, textYPos;
+        if (formulas.first().getMathElements().isEmpty()) {
+            // Setting text "start main formula here"
+            textXPos = FormulasPositionSet.mMainFormulaStartXPosition;
+            textYPos = FormulasPositionSet.getMainFormulaVerticalAlignment();
+            canvas.getGraphicsContext2D().setTextAlign(TextAlignment.LEFT);
+            canvas.getGraphicsContext2D().setFont(new javafx.scene.text.Font("System", 15));
+            canvas.getGraphicsContext2D().fillText("Drag and drop math elements here to begin the main function",
+                    textXPos, textYPos);
+        }
+        // Setting text "start constraint formula here"
+        textXPos = FormulasPositionSet.mConstraintStartXPosition;
+        textYPos = FormulasPositionSet.mFirstConstraintStartYPosition  + (formulas.size() - 2)*
+                (FormulasPositionSet.mDefaultHeight+FormulasPositionSet.mVerticalSpaceBetweenConstraints);
+        canvas.getGraphicsContext2D().setTextAlign(TextAlignment.LEFT);
+        canvas.getGraphicsContext2D().setFont(new javafx.scene.text.Font("System", 15));
+        canvas.getGraphicsContext2D().fillText("Drag and drop math elements here to add a new constraint",
+                textXPos, textYPos);
 
-
-    private void initializeCanvas() {
-        this.g2 = new FXGraphics2D(canvas.getGraphicsContext2D());
-        formulas.add(testFormula());
-        drawFormula(formulas.first());
-
-        // Redraw canvas when size changes.
-//        canvas.widthProperty().addListener(evt -> drawFormula());
-//        canvas.heightProperty().addListener(evt -> drawFormula());
+//        canvas.getGraphicsContext2D().strokeLine(10, formulas.first().getYEnd() + 10,
+//                canvas.getWidth() - 10, formulas.first().getYEnd() + 10);
+//        canvas.getGraphicsContext2D().fillText("Constraints", textXPos, formulas.first().getYEnd() + 30);
     }
 
     private void drawFormula(Formula formula) {
         clearCanvas();
-
-        // Setting text
-        int textXPos = 10;
-        canvas.getGraphicsContext2D().setTextAlign(TextAlignment.LEFT);
-        canvas.getGraphicsContext2D().setFont(new javafx.scene.text.Font("Calibri", 18));
-        canvas.getGraphicsContext2D().fillText("Main Function", textXPos, formulas.first().getYStart() - 10);
-        canvas.getGraphicsContext2D().strokeLine(10, formulas.first().getYEnd() + 10,
-                canvas.getWidth() - 10, formulas.first().getYEnd() + 10);
-        canvas.getGraphicsContext2D().fillText("Constraints", textXPos, formulas.first().getYEnd() + 30);
+        setFormulaLabels();
 
         formula.correctIndexes();
         for (MathElement mathElement : formula.getMathElements()) {
@@ -371,6 +409,9 @@ public class MainWindowController {
         Equal equal = new Equal();
         LessOrEqual lessOrEqual = new LessOrEqual();
         GreaterOrEqual greaterOrEqual = new GreaterOrEqual();
+        OpenParenthesis openParenthesis = new OpenParenthesis();
+        CloseParenthesis closeParenthesis = new CloseParenthesis();
+
         MathElement mathElementA = new MathElement(somatorio);
         mathElements.add(mathElementA);
         mathElementA = new MathElement(constant);
@@ -384,6 +425,10 @@ public class MainWindowController {
         mathElementA = new MathElement(lessOrEqual);
         mathElements.add(mathElementA);
         mathElementA = new MathElement(greaterOrEqual);
+        mathElements.add(mathElementA);
+        mathElementA = new MathElement(openParenthesis);
+        mathElements.add(mathElementA);
+        mathElementA = new MathElement(closeParenthesis);
         mathElements.add(mathElementA);
 
         double vAlignment = 50.0;
@@ -405,8 +450,8 @@ public class MainWindowController {
             ImageView imageView = new ImageView();
             imageView.setImage(wr);
             anchorPaneModel.getChildren().add(imageView);
-            anchorPaneModel.setLeftAnchor(imageView, position);
-            anchorPaneModel.setTopAnchor(imageView,vAlignment-(mathElement.getHeight()/2));
+            AnchorPane.setLeftAnchor(imageView, position);
+            AnchorPane.setTopAnchor(imageView,vAlignment-(mathElement.getHeight()/2));
             position += mathElement.getWidth() + 1;
             pair = new Pair<>(imageView, mathElement.getExpression());
             imageEs.add(pair);
@@ -428,7 +473,6 @@ public class MainWindowController {
         mathElement.getIcon().paintIcon(jl, gg, 0, 0);
         return image;
     }
-
 
     public Formula testFormula() {
         // create a formula
@@ -468,7 +512,7 @@ public class MainWindowController {
         expIgual1.setRightExpression(um);
 
         // formula division
-        Formula formula = new Formula(0, 40, true);
+        Formula formula = new Formula(100, 30, true);
         MathElement mathElementS = new MathElement(somatorio);
         formula.addMathElementAtTheEnd(mathElementS);
         MathElement mathElementP = new MathElement(power);

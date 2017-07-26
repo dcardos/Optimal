@@ -2,7 +2,6 @@ package controller;
 
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.control.Button;
 import javafx.scene.control.*;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -14,7 +13,6 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.text.TextAlignment;
 import javafx.util.Pair;
 import model.Formula;
@@ -26,7 +24,6 @@ import org.jfree.fx.FXGraphics2D;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.Optional;
 import java.util.TreeSet;
 import java.util.Vector;
 
@@ -88,20 +85,13 @@ public class MainWindowController {
         // Initializing Model Tab with ME
         Vector<Pair> imageEs = makeModelGridElements();
 
-        // Main formula buttons
-        // TODO for every formula (put on formula class?)
-        HBox hbButtons = new HBox();
-        hbButtons.setSpacing(10.0);
-        Button buttonRemove = new Button("X");
-        Button buttonLateX = new Button("Entry Formula");
-        hbButtons.getChildren().addAll(buttonLateX, buttonRemove);
-        //buttonRemove.setLayoutX(460);
-        //buttonRemove.setLayoutY(5);
-//        innerAnchorPane.getChildren().add(hbButtons);
-//        AnchorPane.setRightAnchor(hbButtons, FormulasPositionSet.mMainFormulaStartYPosition);
-//        AnchorPane.setTopAnchor(hbButtons, formulas.first().getAlignment() - 15.0);
-
-        buttonLateX.setOnAction(e -> fillFormulaFromLatexEntry());
+        // Positioning formula buttons
+        // TODO: make a method for when a new formula is added AND a new '+' button at the end
+        for (Formula formula : formulas) {
+            innerAnchorPane.getChildren().add(formula.getHbButtons());
+            AnchorPane.setRightAnchor(formula.getHbButtons(), 30.0);
+            AnchorPane.setTopAnchor(formula.getHbButtons(), formula.getAlignment() - 15.0);
+        }
 
         for (Pair<ImageView, Expression> pair : imageEs) {
             ImageView imageView = pair.getKey();
@@ -129,7 +119,7 @@ public class MainWindowController {
         cut.setOnAction(event -> System.out.println("cut clicked"));
         remove.setOnAction(event -> {
             lastModifiedFormula.removeMathElement(lastModifiedFormula.getLastMathElementModified());
-            drawFormula(lastModifiedFormula);
+            drawFormula();
             lastModifiedFormula.setLastMathElementModified(null);
             lastModifiedFormula = null;
         });
@@ -157,7 +147,7 @@ public class MainWindowController {
                     } else if (mathElement.getExpression() instanceof Constant) {
                         dialogs.callConstantDialog(formula, mathElement);
                     }
-                    drawFormula(formula);
+                    drawFormula();
                 }
             }
         });
@@ -203,27 +193,17 @@ public class MainWindowController {
                 assert (null != beingDragged);
                 beingDragged.setColor(Color.gray);
                 Formula formula = getFormula((int)event.getY());
-                if (null == formula) return;
+                if (null == formula || !formula.isActiveEditing()) return;
                 MathElement mathElement = formula.getMathElement(((int)event.getX()));
                 // inside the formula, over a mathElement area
                 if (formula.getLastMathElementModified() != beingDragged) { // first addition
-                    // TODO: fix for first constraint
                     if (null == mathElement && formula.getMathElements().isEmpty()) {
                         formula.addMathElementAtTheBeginning(beingDragged);
-                        if (!flagNewConstraint && formula == formulas.last()) {   // preparing area for next constraint
-                            newConstraint = new Formula(FormulasPositionSet.mConstraintStartXPosition,
-                                    FormulasPositionSet.mFirstConstraintStartYPosition +
-                                            (formulas.size() - 1)*
-                                    (FormulasPositionSet.mDefaultHeight+FormulasPositionSet.mVerticalSpaceBetweenConstraints),
-                                    false);
-                            formulas.add(newConstraint);
-                            flagNewConstraint = true;
-                        }
                     } else if (null != mathElement) {
                         formula.addMathElement(beingDragged, mathElement.getXStart());
                     }
                     formula.setLastMathElementModified(beingDragged);
-                    drawFormula(formula);
+                    drawFormula();
                 } else {
                     if (null == mathElement) {
                         return;
@@ -233,12 +213,12 @@ public class MainWindowController {
                             && event.getX() <= mathElement.getXCenter()) { // moving left
                         formula.removeMathElement(beingDragged);
                         formula.addMathElement(beingDragged, mathElement.getXStart());
-                        drawFormula(formula);
+                        drawFormula();
                     } else if (mathElement.getXStart() >= beingDragged.getXEnd() &&
                             event.getX() > mathElement.getXCenter()) {    // moving right
                         formula.removeMathElement(beingDragged);
                         formula.addMathElement(beingDragged, mathElement.getXEnd());
-                        drawFormula(formula);
+                        drawFormula();
                     }
                 }
                 lastModifiedFormula = formula;
@@ -247,16 +227,12 @@ public class MainWindowController {
         });
 
         canvas.setOnDragExited(event -> {
-            if (!event.isDropCompleted()) {
-                System.out.println("Dragged did not completed");
+            if (!event.isDropCompleted() && (null != lastModifiedFormula)) {
+                System.out.println("Dragged did not complete");
                 lastModifiedFormula.removeMathElement(beingDragged);
-                if (lastModifiedFormula.getMathElements().isEmpty() && !lastModifiedFormula.isMainFunction()) {
-                    formulas.remove(newConstraint);
-                    newConstraint = null;
-                    flagNewConstraint = false;
-                }
-                drawFormula(lastModifiedFormula);
+                drawFormula();
                 beingDragged = null;
+                lastModifiedFormula = null;
             }
             event.consume();
         });
@@ -269,8 +245,8 @@ public class MainWindowController {
             if (db.hasString()) {
                 System.out.println("Dragged completed successfully!");
                 success = true;
-                if (lastModifiedFormula == null) {
-                    System.out.println("lastModifiedFormula == null!");
+                if (lastModifiedFormula == null || !lastModifiedFormula.isActiveEditing()) {
+                    System.out.println("lastModifiedFormula == null or not in Editing mode");
                     return;
                 }
                 lastModifiedFormula.removeMathElement(beingDragged);
@@ -319,8 +295,9 @@ public class MainWindowController {
                     }
                 }
                 beingDragged = null;
-                drawFormula(formulas.first());
+                drawFormula();
             }
+            System.out.println(formulas);
             /* let the source know whether the string was successfully
              * transferred and used */
             event.setDropCompleted(success);
@@ -332,17 +309,6 @@ public class MainWindowController {
 
     public void closeWindow() {
         mMain.getPrimaryStage().close();
-    }
-
-    private void fillFormulaFromLatexEntry() {
-        Formula formula = getFormula(50);
-        if (null == formula) return;
-        Dialogs dialogs = new Dialogs();
-        Optional<String> result = dialogs.latexEntryDialog();
-        result.ifPresent(name -> {
-            // TODO: parse latex entry and put into the formula
-            System.out.println("Latex Entry: " + name);
-        });
     }
 
     private void setFormulaLabels() {
@@ -358,8 +324,12 @@ public class MainWindowController {
         }
         // Setting text "start constraint formula here"
         textXPos = FormulasPositionSet.mConstraintStartXPosition;
-        textYPos = FormulasPositionSet.mFirstConstraintStartYPosition  + (formulas.size() - 2)*
-                (FormulasPositionSet.mDefaultHeight+FormulasPositionSet.mVerticalSpaceBetweenConstraints);
+        if (formulas.last().getMathElements().isEmpty()) {
+            textYPos = FormulasPositionSet.getFirstConstraintVerticalAlignment();
+        } else {
+            textYPos = FormulasPositionSet.mFirstConstraintStartYPosition + (formulas.size() - 1) *
+                    (FormulasPositionSet.mDefaultHeight + FormulasPositionSet.mVerticalSpaceBetweenConstraints);
+        }
         canvas.getGraphicsContext2D().setTextAlign(TextAlignment.LEFT);
         canvas.getGraphicsContext2D().setFont(new javafx.scene.text.Font("System", 15));
         canvas.getGraphicsContext2D().fillText("Drag and drop math elements here to add a new constraint",
@@ -370,14 +340,16 @@ public class MainWindowController {
 //        canvas.getGraphicsContext2D().fillText("Constraints", textXPos, formulas.first().getYEnd() + 30);
     }
 
-    private void drawFormula(Formula formula) {
+    private void drawFormula() {
         clearCanvas();
         setFormulaLabels();
 
-        formula.correctIndexes();
-        for (MathElement mathElement : formula.getMathElements()) {
-            // now create an actual image of the rendered equation
-            drawMathElement(mathElement, formula.getAlignment());
+        for (Formula formula : formulas) {
+            formula.correctIndexes();
+            for (MathElement mathElement : formula.getMathElements()) {
+                // now create an actual image of the rendered equation
+                drawMathElement(mathElement, formula.getAlignment());
+            }
         }
     }
 

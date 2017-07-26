@@ -12,7 +12,13 @@ public class FormulasPositionSet {
         return mDefaultHeight/2 + mMainFormulaStartYPosition;
     }
 
+    public static int getFirstConstraintVerticalAlignment() {
+        return mDefaultHeight/2 + mFirstConstraintStartYPosition;
+    }
+
     public static int getMainFormulaYEndPosition() {
         return mMainFormulaStartYPosition + mDefaultHeight;
     }
+
+
 }

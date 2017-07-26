@@ -1,15 +1,23 @@
 package model;
 
+import controller.Dialogs;
 import controller.FormulasPositionSet;
+import javafx.scene.control.Button;
+import javafx.scene.layout.HBox;
 
 import java.awt.*;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.Optional;
+import java.util.Queue;
+import java.util.TreeSet;
 
 /**
  * Created by Danilo on 29/09/2016.
  */
 public class Formula implements Comparable<Formula>{
     private static int counter = 0;
+    private boolean mActiveEditing;
+    private final HBox mHbButtons = new HBox();
     private int mId;
     private int mXStart;
     private int mYStart;
@@ -36,6 +44,40 @@ public class Formula implements Comparable<Formula>{
         mYEnd = mYStart + mHeight;
         mLastMathElementModified = null;
         mRedFlag = false;
+        mActiveEditing = false;
+
+        settingButtons();
+    }
+
+    private void settingButtons () {
+        // Setting initial buttons
+        javafx.scene.control.Button buttonAddFormula = new javafx.scene.control.Button("New formula");
+        javafx.scene.control.Button buttonLateX = new Button("Entry Latex formula");
+        javafx.scene.control.Button buttonStopEditing = new Button("Stop editing");
+        mHbButtons.setSpacing(10.0);
+        mHbButtons.getChildren().addAll(buttonAddFormula, buttonLateX);
+
+        // Button's action
+        buttonAddFormula.setOnAction(event -> {
+            setActiveEditing(true);
+            mHbButtons.getChildren().removeAll(buttonAddFormula, buttonLateX);
+            mHbButtons.getChildren().add(buttonStopEditing);
+        });
+
+        buttonStopEditing.setOnAction(event -> {
+            setActiveEditing(false);
+            mHbButtons.getChildren().remove(buttonStopEditing);
+            mHbButtons.getChildren().addAll(buttonAddFormula, buttonLateX);
+        });
+
+        buttonLateX.setOnAction(e -> {
+            Dialogs dialogs = new Dialogs();
+            Optional<String> result = dialogs.latexEntryDialog();
+            result.ifPresent(name -> {
+                // TODO: parse latex entry and put into the formula
+                System.out.println("Latex Entry: " + name);
+            });
+        });
     }
 
     public int getId() {
@@ -76,6 +118,18 @@ public class Formula implements Comparable<Formula>{
 
     public void setRedFlag(boolean redFlag) {
         this.mRedFlag = redFlag;
+    }
+
+    public boolean isActiveEditing() {
+        return mActiveEditing;
+    }
+
+    public void setActiveEditing(boolean activeEditing) {
+        mActiveEditing = activeEditing;
+    }
+
+    public HBox getHbButtons() {
+        return mHbButtons;
     }
 
     public boolean isMainFunction() {
@@ -128,6 +182,7 @@ public class Formula implements Comparable<Formula>{
     }
 
     public void addMathElement(MathElement mathElement, int xPosition) {
+        if (!isActiveEditing()) return;         // add element only in editing mode
         mathElement.setXStart(xPosition);
         mathElement.setYStart(mAlignment - mathElement.getHeight()/2);
         if (xPosition != mXStart + mWidth)     // if it will be added in the middle then update indexes

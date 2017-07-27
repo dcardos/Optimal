@@ -3,6 +3,7 @@ package controller;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.ImageView;
@@ -38,6 +39,7 @@ public class MainWindowController {
     private MathElement beingDragged;
     private boolean flagNewConstraint = false;
     private final ToggleGroup mMaxMin = new ToggleGroup();
+    public static final javafx.scene.control.Button buttonNewConstraint = new Button("Add New Constraint");;
 
     @FXML private Label labelEditVariable;
     @FXML private Canvas canvas;
@@ -46,7 +48,7 @@ public class MainWindowController {
     @FXML private RadioButton rdBtnMax;
     @FXML private RadioButton rdBtnMin;
 
-    public void setMain(Main main) {
+    public void setMain(Main main) throws Exception {
         mMain = main;
         labelEditVariable.setText("Editing Sum: \u2211");
         innerAnchorPane.setStyle("-fx-background-color: #ffe1c5");
@@ -57,14 +59,32 @@ public class MainWindowController {
         javafx.scene.text.Font.loadFont(Main.class.getResourceAsStream("/org/scilab/forge/jlatexmath/fonts/maths/jlm_cmsy10.ttf"), 1);
         javafx.scene.text.Font.loadFont(Main.class.getResourceAsStream("/org/scilab/forge/jlatexmath/fonts/latin/jlm_cmr10.ttf"), 1);
 
+        // Initializing button for new formula
+        // TODO: put actions on buttons in this class not in Formula
+        // TODO: make FormulasPostionSet.getSpaceBetweenFormulas (to get more concise)
+        // TODO: remove a formula
+        innerAnchorPane.getChildren().add(buttonNewConstraint);
+        buttonNewConstraint.setDisable(true);
+        buttonNewConstraint.setOnAction(event -> {
+            Formula newConstraint = new Formula(FormulasPositionSet.mConstraintStartXPosition,
+                    FormulasPositionSet.mFirstConstraintStartYPosition +
+                            ((formulas.size()-1)*(FormulasPositionSet.mDefaultHeight+FormulasPositionSet.mVerticalSpaceBetweenConstraints)),
+                    false);
+            try {
+                addNewFormula(newConstraint);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
         // Initializing formulas
         this.formulas = new TreeSet<>();
         Formula mainFormula = new Formula(FormulasPositionSet.mMainFormulaStartXPosition,
                 FormulasPositionSet.mMainFormulaStartYPosition, true);
-        formulas.add(mainFormula);
+        addNewFormula(mainFormula);
         Formula firstConstraint = new Formula(FormulasPositionSet.mConstraintStartXPosition,
                 FormulasPositionSet.mFirstConstraintStartYPosition, false);
-        formulas.add(firstConstraint);
+        addNewFormula(firstConstraint);
 
         // Initializing canvas
         this.g2 = new FXGraphics2D(canvas.getGraphicsContext2D());
@@ -79,19 +99,8 @@ public class MainWindowController {
         rdBtnMax.setToggleGroup(mMaxMin);
         rdBtnMin.setToggleGroup(mMaxMin);
 
-        // Initializing "add formula" labels
-
-
         // Initializing Model Tab with ME
         Vector<Pair> imageEs = makeModelGridElements();
-
-        // Positioning formula buttons
-        // TODO: make a method for when a new formula is added AND a new '+' button at the end
-        for (Formula formula : formulas) {
-            innerAnchorPane.getChildren().add(formula.getHbButtons());
-            AnchorPane.setRightAnchor(formula.getHbButtons(), 30.0);
-            AnchorPane.setTopAnchor(formula.getHbButtons(), formula.getAlignment() - 15.0);
-        }
 
         for (Pair<ImageView, Expression> pair : imageEs) {
             ImageView imageView = pair.getKey();
@@ -309,6 +318,24 @@ public class MainWindowController {
 
     public void closeWindow() {
         mMain.getPrimaryStage().close();
+    }
+
+    private void addNewFormula(Formula formulaArg) throws Exception {
+        // Positioning formula buttons
+        if( !formulas.add(formulaArg) ) {
+            System.out.println("Cannot add formula! Check y start value");
+            throw new Exception();
+        }
+        innerAnchorPane.getChildren().add(formulaArg.getHbButtons());
+        AnchorPane.setRightAnchor(formulaArg.getHbButtons(), 30.0);
+        AnchorPane.setTopAnchor(formulaArg.getHbButtons(), formulaArg.getAlignment() - 15.0);
+        // adjusting where new constraint button will be located
+        if (!formulaArg.isMainFunction()) {
+            AnchorPane.setRightAnchor(buttonNewConstraint, 30.0);
+            AnchorPane.setTopAnchor(buttonNewConstraint, (formulaArg.getAlignment() - 15.0) +
+                    (FormulasPositionSet.mDefaultHeight + FormulasPositionSet.mVerticalSpaceBetweenConstraints));
+            buttonNewConstraint.setDisable(true);
+        }
     }
 
     private void setFormulaLabels() {

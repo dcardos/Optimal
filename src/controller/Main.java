@@ -27,7 +27,11 @@ public class Main extends Application {
         AnchorPane pane = loader.load();
 
         MainWindowController mainWindowController = loader.getController();
-        mainWindowController.setMain(this);
+        try {
+            mainWindowController.setMain(this);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         Scene scene = new Scene(pane);      // takes a pane as an argument
         //scene.getStylesheets().add(getClass().getResource("../view/styles.css").toExternalForm());

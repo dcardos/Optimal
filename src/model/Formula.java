@@ -2,6 +2,7 @@ package model;
 
 import controller.Dialogs;
 import controller.FormulasPositionSet;
+import controller.MainWindowController;
 import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 
@@ -51,23 +52,28 @@ public class Formula implements Comparable<Formula>{
 
     private void settingButtons () {
         // Setting initial buttons
-        javafx.scene.control.Button buttonAddFormula = new javafx.scene.control.Button("New formula");
-        javafx.scene.control.Button buttonLateX = new Button("Entry Latex formula");
+        javafx.scene.control.Button buttonDesignFormula = new javafx.scene.control.Button("Design Formula");
+        javafx.scene.control.Button buttonLateX = new Button("Entry Latex Formula");
         javafx.scene.control.Button buttonStopEditing = new Button("Stop editing");
         mHbButtons.setSpacing(10.0);
-        mHbButtons.getChildren().addAll(buttonAddFormula, buttonLateX);
+        mHbButtons.getChildren().addAll(buttonDesignFormula, buttonLateX);
 
         // Button's action
-        buttonAddFormula.setOnAction(event -> {
+        buttonDesignFormula.setOnAction(event -> {
             setActiveEditing(true);
-            mHbButtons.getChildren().removeAll(buttonAddFormula, buttonLateX);
+            mHbButtons.getChildren().removeAll(buttonDesignFormula, buttonLateX);
             mHbButtons.getChildren().add(buttonStopEditing);
         });
 
         buttonStopEditing.setOnAction(event -> {
             setActiveEditing(false);
             mHbButtons.getChildren().remove(buttonStopEditing);
-            mHbButtons.getChildren().addAll(buttonAddFormula, buttonLateX);
+            if (!mMathElements.isEmpty()) {
+                buttonDesignFormula.setText("Edit Formula");
+                buttonLateX.setText("Edit Latex Formula");
+                MainWindowController.buttonNewConstraint.setDisable(false);
+            }
+            mHbButtons.getChildren().addAll(buttonDesignFormula, buttonLateX);
         });
 
         buttonLateX.setOnAction(e -> {

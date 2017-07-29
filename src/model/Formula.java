@@ -1,14 +1,10 @@
 package model;
 
-import controller.Dialogs;
 import controller.FormulasPositionSet;
-import controller.MainWindowController;
-import javafx.scene.control.Button;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 
 import java.awt.*;
 import java.util.LinkedList;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.TreeSet;
 
@@ -18,7 +14,7 @@ import java.util.TreeSet;
 public class Formula implements Comparable<Formula>{
     private static int counter = 0;
     private boolean mActiveEditing;
-    private final HBox mHbButtons = new HBox();
+    private final VBox mVBox = new VBox();
     private int mId;
     private int mXStart;
     private int mYStart;
@@ -46,44 +42,6 @@ public class Formula implements Comparable<Formula>{
         mLastMathElementModified = null;
         mRedFlag = false;
         mActiveEditing = false;
-
-        settingButtons();
-    }
-
-    private void settingButtons () {
-        // Setting initial buttons
-        javafx.scene.control.Button buttonDesignFormula = new javafx.scene.control.Button("Design Formula");
-        javafx.scene.control.Button buttonLateX = new Button("Entry Latex Formula");
-        javafx.scene.control.Button buttonStopEditing = new Button("Stop editing");
-        mHbButtons.setSpacing(10.0);
-        mHbButtons.getChildren().addAll(buttonDesignFormula, buttonLateX);
-
-        // Button's action
-        buttonDesignFormula.setOnAction(event -> {
-            setActiveEditing(true);
-            mHbButtons.getChildren().removeAll(buttonDesignFormula, buttonLateX);
-            mHbButtons.getChildren().add(buttonStopEditing);
-        });
-
-        buttonStopEditing.setOnAction(event -> {
-            setActiveEditing(false);
-            mHbButtons.getChildren().remove(buttonStopEditing);
-            if (!mMathElements.isEmpty()) {
-                buttonDesignFormula.setText("Edit Formula");
-                buttonLateX.setText("Edit Latex Formula");
-                MainWindowController.buttonNewConstraint.setDisable(false);
-            }
-            mHbButtons.getChildren().addAll(buttonDesignFormula, buttonLateX);
-        });
-
-        buttonLateX.setOnAction(e -> {
-            Dialogs dialogs = new Dialogs();
-            Optional<String> result = dialogs.latexEntryDialog();
-            result.ifPresent(name -> {
-                // TODO: parse latex entry and put into the formula
-                System.out.println("Latex Entry: " + name);
-            });
-        });
     }
 
     public int getId() {
@@ -134,8 +92,8 @@ public class Formula implements Comparable<Formula>{
         mActiveEditing = activeEditing;
     }
 
-    public HBox getHbButtons() {
-        return mHbButtons;
+    public VBox getVBox() {
+        return mVBox;
     }
 
     public boolean isMainFunction() {
@@ -167,12 +125,16 @@ public class Formula implements Comparable<Formula>{
 
     public void setXStart(int xStart) {
         mXStart = xStart;
-        mXEnd = mXStart + mWidth -1;
+        mXEnd = mXStart + mWidth;
     }
 
     public void setYStart(int yStart) {
         mYStart = yStart;
-        mYEnd = mYStart + mHeight -1;
+        mYEnd = mYStart + mHeight;
+        mAlignment = (mHeight/2) + mYStart;
+        for (MathElement mathElement : mMathElements){
+            mathElement.setYStart(mathElement.getYStart()-FormulasPositionSet.getTotalConstraintVerticalSpace());
+        }
     }
 
     public void setMainFunction(boolean mainFunction) {

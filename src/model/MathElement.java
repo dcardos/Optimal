@@ -75,7 +75,7 @@ public class MathElement implements Comparable<MathElement>{
 
     public void setYStart(int YStart) {
         mYStart = YStart;
-        mYEnd = mYStart + mHeight -1;
+        mYEnd = mYStart + mHeight;
         mYCenter = (mYStart + mYEnd)/2;
     }
 

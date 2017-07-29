@@ -1,9 +1,10 @@
 package controller;
 
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.control.*;
 import javafx.scene.control.Button;
+import javafx.scene.control.*;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.ImageView;
@@ -25,6 +26,7 @@ import org.jfree.fx.FXGraphics2D;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.Optional;
 import java.util.TreeSet;
 import java.util.Vector;
 
@@ -35,11 +37,9 @@ public class MainWindowController {
 
     private TreeSet<Formula> formulas;
     private Formula lastModifiedFormula;
-    private Formula newConstraint;
     private MathElement beingDragged;
-    private boolean flagNewConstraint = false;
     private final ToggleGroup mMaxMin = new ToggleGroup();
-    public static final javafx.scene.control.Button buttonNewConstraint = new Button("Add New Constraint");;
+    private final javafx.scene.control.Button buttonNewConstraint = new Button("Add New Constraint");
 
     @FXML private Label labelEditVariable;
     @FXML private Canvas canvas;
@@ -47,11 +47,12 @@ public class MainWindowController {
     @FXML private AnchorPane anchorPaneModel;
     @FXML private RadioButton rdBtnMax;
     @FXML private RadioButton rdBtnMin;
+    @FXML private Label lblConstraints;
 
     public void setMain(Main main) throws Exception {
         mMain = main;
         labelEditVariable.setText("Editing Sum: \u2211");
-        innerAnchorPane.setStyle("-fx-background-color: #ffe1c5");
+        innerAnchorPane.setStyle("-fx-background-color: #FFFFFF");
 
         // Initializing fonts for LateX
         javafx.scene.text.Font.loadFont(Main.class.getResourceAsStream("/org/scilab/forge/jlatexmath/fonts/base/jlm_cmmi10.ttf"), 1);
@@ -59,16 +60,19 @@ public class MainWindowController {
         javafx.scene.text.Font.loadFont(Main.class.getResourceAsStream("/org/scilab/forge/jlatexmath/fonts/maths/jlm_cmsy10.ttf"), 1);
         javafx.scene.text.Font.loadFont(Main.class.getResourceAsStream("/org/scilab/forge/jlatexmath/fonts/latin/jlm_cmr10.ttf"), 1);
 
+        // Initializing constraints label
+        AnchorPane.setTopAnchor(lblConstraints, 5+FormulasPositionSet.getMainFormulaYEndPosition() +
+                (FormulasPositionSet.mFirstConstraintStartYPosition -
+                        FormulasPositionSet.getMainFormulaYEndPosition())/2.0);
+        drawFormulas();
+
         // Initializing button for new formula
-        // TODO: put actions on buttons in this class not in Formula
-        // TODO: make FormulasPostionSet.getSpaceBetweenFormulas (to get more concise)
-        // TODO: remove a formula
         innerAnchorPane.getChildren().add(buttonNewConstraint);
         buttonNewConstraint.setDisable(true);
-        buttonNewConstraint.setOnAction(event -> {
+        buttonNewConstraint.setOnMouseClicked(event -> {
             Formula newConstraint = new Formula(FormulasPositionSet.mConstraintStartXPosition,
                     FormulasPositionSet.mFirstConstraintStartYPosition +
-                            ((formulas.size()-1)*(FormulasPositionSet.mDefaultHeight+FormulasPositionSet.mVerticalSpaceBetweenConstraints)),
+                            ((formulas.size()-1)*FormulasPositionSet.getTotalConstraintVerticalSpace()),
                     false);
             try {
                 addNewFormula(newConstraint);
@@ -88,12 +92,11 @@ public class MainWindowController {
 
         // Initializing canvas
         this.g2 = new FXGraphics2D(canvas.getGraphicsContext2D());
-        setFormulaLabels();
         // formulas.add(testFormula());
-        // drawFormula(formulas.first());
+        // drawFormulas(formulas.first());
         // Redraw canvas when size changes.
-        // canvas.widthProperty().addListener(evt -> drawFormula());
-        // canvas.heightProperty().addListener(evt -> drawFormula());
+        // canvas.widthProperty().addListener(evt -> drawFormulas());
+        // canvas.heightProperty().addListener(evt -> drawFormulas());
 
         // Initializing radio buttons
         rdBtnMax.setToggleGroup(mMaxMin);
@@ -128,7 +131,7 @@ public class MainWindowController {
         cut.setOnAction(event -> System.out.println("cut clicked"));
         remove.setOnAction(event -> {
             lastModifiedFormula.removeMathElement(lastModifiedFormula.getLastMathElementModified());
-            drawFormula();
+            drawFormulas();
             lastModifiedFormula.setLastMathElementModified(null);
             lastModifiedFormula = null;
         });
@@ -156,7 +159,7 @@ public class MainWindowController {
                     } else if (mathElement.getExpression() instanceof Constant) {
                         dialogs.callConstantDialog(formula, mathElement);
                     }
-                    drawFormula();
+                    drawFormulas();
                 }
             }
         });
@@ -212,7 +215,7 @@ public class MainWindowController {
                         formula.addMathElement(beingDragged, mathElement.getXStart());
                     }
                     formula.setLastMathElementModified(beingDragged);
-                    drawFormula();
+                    drawFormulas();
                 } else {
                     if (null == mathElement) {
                         return;
@@ -222,12 +225,12 @@ public class MainWindowController {
                             && event.getX() <= mathElement.getXCenter()) { // moving left
                         formula.removeMathElement(beingDragged);
                         formula.addMathElement(beingDragged, mathElement.getXStart());
-                        drawFormula();
+                        drawFormulas();
                     } else if (mathElement.getXStart() >= beingDragged.getXEnd() &&
                             event.getX() > mathElement.getXCenter()) {    // moving right
                         formula.removeMathElement(beingDragged);
                         formula.addMathElement(beingDragged, mathElement.getXEnd());
-                        drawFormula();
+                        drawFormulas();
                     }
                 }
                 lastModifiedFormula = formula;
@@ -239,7 +242,7 @@ public class MainWindowController {
             if (!event.isDropCompleted() && (null != lastModifiedFormula)) {
                 System.out.println("Dragged did not complete");
                 lastModifiedFormula.removeMathElement(beingDragged);
-                drawFormula();
+                drawFormulas();
                 beingDragged = null;
                 lastModifiedFormula = null;
             }
@@ -304,7 +307,7 @@ public class MainWindowController {
                     }
                 }
                 beingDragged = null;
-                drawFormula();
+                drawFormulas();
             }
             System.out.println(formulas);
             /* let the source know whether the string was successfully
@@ -321,55 +324,171 @@ public class MainWindowController {
     }
 
     private void addNewFormula(Formula formulaArg) throws Exception {
+        // Setting initial buttons
+        javafx.scene.control.Button buttonDesignFormula = new javafx.scene.control.Button("Design Formula");
+        javafx.scene.control.Button buttonLateX = new Button("LateX Formula");
+        javafx.scene.control.Button buttonStopEditing = new Button("Stop editing");
+        javafx.scene.control.Button buttonDelete = new Button("Delete");    // just on constraints
+        formulaArg.getVBox().setAlignment(Pos.CENTER);
+        formulaArg.getVBox().setSpacing(5);
+        formulaArg.getVBox().getChildren().addAll(buttonDesignFormula, buttonLateX, buttonDelete);
+//        if ((formulaArg.getMathElements().isEmpty()) &&
+//                (formulaArg.getYStart() <= FormulasPositionSet.mFirstConstraintStartYPosition))
+            buttonDelete.setDisable(true);
+
+        // Button's action
+        buttonDesignFormula.setOnMouseClicked(event -> {
+            formulaArg.setActiveEditing(true);
+            formulaArg.getVBox().getChildren().removeAll(buttonDesignFormula, buttonLateX, buttonDelete);
+            formulaArg.getVBox().getChildren().add(buttonStopEditing);
+            AnchorPane.setTopAnchor(formulaArg.getVBox(), (double)formulaArg.getAlignment()-15);
+            // Disabling all the other buttons
+            for (Formula formula : formulas){
+                if (formula.getId() != formulaArg.getId())
+                    formula.getVBox().setDisable(true);
+            }
+            // Setting drag and drop area
+            if (formulaArg.getMathElements().isEmpty()) {
+                canvas.getGraphicsContext2D().setTextAlign(TextAlignment.LEFT);
+                canvas.getGraphicsContext2D().setFont(new javafx.scene.text.Font("System", 15));
+                canvas.getGraphicsContext2D().fillText("Drag and drop math elements here",
+                        FormulasPositionSet.mMainFormulaStartXPosition, formulaArg.getAlignment());
+            }
+        });
+
+        buttonStopEditing.setOnMouseClicked(event -> {
+            // enabling all the other buttons
+            for (Formula formula : formulas){
+                if (formula.getId() != formulaArg.getId())
+                    formula.getVBox().setDisable(false);
+            }
+            formulaArg.setActiveEditing(false);
+            formulaArg.getVBox().getChildren().remove(buttonStopEditing);
+            if (!formulaArg.getMathElements().isEmpty()) {
+                buttonDesignFormula.setText("Edit Formula");
+                buttonLateX.setText("Edit Latex Formula");
+                if (!formulaArg.isMainFunction())
+                    buttonNewConstraint.setDisable(false);
+                buttonDelete.setDisable(false);
+            } else
+                buttonDelete.setDisable(true);
+            formulaArg.getVBox().getChildren().addAll(buttonDesignFormula, buttonLateX, buttonDelete);
+            AnchorPane.setTopAnchor(formulaArg.getVBox(), (double)formulaArg.getYStart());
+        });
+
+        buttonLateX.setOnMouseClicked(e -> {
+            Dialogs dialogs = new Dialogs();
+            Optional<String> result = dialogs.latexEntryDialog();
+            result.ifPresent(name -> {
+                // TODO: parse latex entry and put into the formula
+                System.out.println("Latex Entry: " + name);
+            });
+        });
+
+        buttonDelete.setOnMouseClicked(event -> {
+            if (formulaArg.isMainFunction()) {
+                formulaArg.getMathElements().removeAll(formulaArg.getMathElements());
+                buttonDesignFormula.setText("Design Formula");
+                buttonLateX.setText("Latex Formula");
+                drawFormulas();
+                buttonDelete.setDisable(true);
+                return;
+            }
+            formulaArg.getVBox().getChildren().removeAll(buttonDelete, buttonDesignFormula, buttonLateX);
+            // Repositioning buttons
+            for (Formula formula : formulas) {
+                if (formula.getYStart() > formulaArg.getYStart())
+                    AnchorPane.setTopAnchor(formula.getVBox(), (double)formula.getYStart() -
+                        FormulasPositionSet.getTotalConstraintVerticalSpace());
+            }
+            removeConstraint(formulaArg);
+            AnchorPane.setTopAnchor(buttonNewConstraint, (double) formulas.last().getAlignment() +
+                    FormulasPositionSet.getTotalConstraintVerticalSpace());
+        });
+
         // Positioning formula buttons
         if( !formulas.add(formulaArg) ) {
             System.out.println("Cannot add formula! Check y start value");
             throw new Exception();
         }
-        innerAnchorPane.getChildren().add(formulaArg.getHbButtons());
-        AnchorPane.setRightAnchor(formulaArg.getHbButtons(), 30.0);
-        AnchorPane.setTopAnchor(formulaArg.getHbButtons(), formulaArg.getAlignment() - 15.0);
+        innerAnchorPane.getChildren().add(formulaArg.getVBox());
+        AnchorPane.setRightAnchor(formulaArg.getVBox(), 30.0);
+        AnchorPane.setTopAnchor(formulaArg.getVBox(), (double)formulaArg.getYStart());
+
         // adjusting where new constraint button will be located
         if (!formulaArg.isMainFunction()) {
             AnchorPane.setRightAnchor(buttonNewConstraint, 30.0);
-            AnchorPane.setTopAnchor(buttonNewConstraint, (formulaArg.getAlignment() - 15.0) +
-                    (FormulasPositionSet.mDefaultHeight + FormulasPositionSet.mVerticalSpaceBetweenConstraints));
+            AnchorPane.setTopAnchor(buttonNewConstraint, (double)formulas.last().getAlignment() +
+                    FormulasPositionSet.getTotalConstraintVerticalSpace());
             buttonNewConstraint.setDisable(true);
         }
     }
 
-    private void setFormulaLabels() {
-        int textXPos, textYPos;
-        if (formulas.first().getMathElements().isEmpty()) {
-            // Setting text "start main formula here"
-            textXPos = FormulasPositionSet.mMainFormulaStartXPosition;
-            textYPos = FormulasPositionSet.getMainFormulaVerticalAlignment();
-            canvas.getGraphicsContext2D().setTextAlign(TextAlignment.LEFT);
-            canvas.getGraphicsContext2D().setFont(new javafx.scene.text.Font("System", 15));
-            canvas.getGraphicsContext2D().fillText("Drag and drop math elements here to begin the main function",
-                    textXPos, textYPos);
+    private void removeConstraint(Formula formulaArg) {
+        if (formulaArg.isMainFunction()) {
+            System.out.println("Impossible to remove Main Function");
+            return;
         }
-        // Setting text "start constraint formula here"
-        textXPos = FormulasPositionSet.mConstraintStartXPosition;
-        if (formulas.last().getMathElements().isEmpty()) {
-            textYPos = FormulasPositionSet.getFirstConstraintVerticalAlignment();
-        } else {
-            textYPos = FormulasPositionSet.mFirstConstraintStartYPosition + (formulas.size() - 1) *
-                    (FormulasPositionSet.mDefaultHeight + FormulasPositionSet.mVerticalSpaceBetweenConstraints);
+        if (!formulas.remove(formulaArg)) {
+            System.out.println("Impossible to remove this formula! Check y start.");
+            return;
         }
-        canvas.getGraphicsContext2D().setTextAlign(TextAlignment.LEFT);
-        canvas.getGraphicsContext2D().setFont(new javafx.scene.text.Font("System", 15));
-        canvas.getGraphicsContext2D().fillText("Drag and drop math elements here to add a new constraint",
-                textXPos, textYPos);
-
-//        canvas.getGraphicsContext2D().strokeLine(10, formulas.first().getYEnd() + 10,
-//                canvas.getWidth() - 10, formulas.first().getYEnd() + 10);
-//        canvas.getGraphicsContext2D().fillText("Constraints", textXPos, formulas.first().getYEnd() + 30);
+        for (Formula formula : formulas){
+            if (formula.getYStart() > formulaArg.getYStart()){
+                formula.setYStart(formula.getYStart()-FormulasPositionSet.getTotalConstraintVerticalSpace());
+            }
+        }
+        if (formulas.size() <= 1){  // Always have at least one constraint
+            Formula newConstraint = new Formula(FormulasPositionSet.mConstraintStartXPosition,
+                    FormulasPositionSet.mFirstConstraintStartYPosition +
+                            ((formulas.size()-1)*FormulasPositionSet.getTotalConstraintVerticalSpace()),
+                    false);
+            try {
+                addNewFormula(newConstraint);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        drawFormulas();
     }
 
-    private void drawFormula() {
+//    private void setFormulaLabels() {
+//        int textXPos, textYPos;
+//        if (formulas.first().getMathElements().isEmpty()) {
+//            // Setting text "start main formula here"
+//            textXPos =
+//            textYPos = FormulasPositionSet.getMainFormulaVerticalAlignment();
+//
+//        }
+//        // Setting text "start constraint formula here"
+//        textXPos = FormulasPositionSet.mConstraintStartXPosition;
+//        if (formulas.last().getMathElements().isEmpty()) {
+//            textYPos = FormulasPositionSet.getFirstConstraintVerticalAlignment();
+//        } else {
+//            textYPos = FormulasPositionSet.mFirstConstraintStartYPosition + ((formulas.size() - 1) *
+//                    FormulasPositionSet.getTotalConstraintVerticalSpace());
+//        }
+//        canvas.getGraphicsContext2D().setTextAlign(TextAlignment.LEFT);
+//        canvas.getGraphicsContext2D().setFont(new javafx.scene.text.Font("System", 15));
+//        canvas.getGraphicsContext2D().fillText("Drag and drop math elements here to add a new constraint",
+//                textXPos, textYPos);
+//
+////        canvas.getGraphicsContext2D().strokeLine(10, formulas.first().getYEnd() + 10,
+////                canvas.getWidth() - 10, formulas.first().getYEnd() + 10);
+////        canvas.getGraphicsContext2D().fillText("Constraints", textXPos, formulas.first().getYEnd() + 30);
+//    }
+
+    private void drawFormulas() {
         clearCanvas();
-        setFormulaLabels();
+
+        // Horizontal line separator
+        double yPos = FormulasPositionSet.getMainFormulaYEndPosition() +
+                (FormulasPositionSet.mFirstConstraintStartYPosition -
+                FormulasPositionSet.getMainFormulaYEndPosition())/2.0;
+        canvas.getGraphicsContext2D().strokeLine(0, yPos, canvas.getWidth(), yPos);
+
+        if (formulas == null)
+            return;
 
         for (Formula formula : formulas) {
             formula.correctIndexes();

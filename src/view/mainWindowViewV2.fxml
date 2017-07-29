@@ -92,9 +92,9 @@
       <TreeView layoutY="237.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="170.0" />
       <AnchorPane fx:id="innerAnchorPane" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="170.0">
          <children>
-            <Canvas fx:id="canvas" height="685.0" width="700.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="100.0" AnchorPane.topAnchor="0.0" />
+            <Canvas fx:id="canvas" height="685.0" width="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
             <Label layoutX="14.0" layoutY="14.0" text="Main Function" />
-            <Label layoutX="14.0" layoutY="121.0" text="Constraints" />
+            <Label fx:id="lblConstraints" layoutX="14.0" layoutY="121.0" text="Constraints" />
             <RadioButton fx:id="rdBtnMax" layoutX="9.0" layoutY="44.0" mnemonicParsing="false" text="Maximize" />
             <RadioButton fx:id="rdBtnMin" layoutX="9.0" layoutY="70.0" mnemonicParsing="false" text="Minimize" />
          </children>

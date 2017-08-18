@@ -6,10 +6,12 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextField?>
@@ -38,31 +40,31 @@
           </Menu>
         </menus>
       </MenuBar>
-      <TabPane layoutY="29.0" prefHeight="140.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="30.0">
+      <TabPane fx:id="tabPane" layoutY="29.0" prefHeight="140.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="30.0">
         <tabs>
-          <Tab text="Variables">
+          <Tab fx:id="tabVar" text="Variables">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <ComboBox layoutX="222.0" layoutY="43.0" prefHeight="26.0" prefWidth="113.0" />
+                        <ComboBox fx:id="cbDomain" layoutX="222.0" layoutY="43.0" prefHeight="26.0" prefWidth="113.0" />
                         <Label layoutX="222.0" layoutY="23.0" text="Domain" />
-                        <CheckBox layoutX="223.0" layoutY="76.0" mnemonicParsing="false" text="Non-negative" />
-                        <Label layoutX="396.0" layoutY="48.0" text="Dimension" />
-                        <ComboBox layoutX="395.0" layoutY="68.0" prefHeight="26.0" prefWidth="73.0" />
-                        <Label layoutX="491.0" layoutY="-2.0" text="Upper bound" />
-                        <Label layoutX="492.0" layoutY="47.0" text="Lower bound" />
-                        <TextField layoutX="492.0" layoutY="19.0" prefHeight="26.0" prefWidth="85.0" />
-                        <TextField layoutX="493.0" layoutY="68.0" prefHeight="26.0" prefWidth="83.0" />
-                        <Button layoutX="65.0" layoutY="24.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="76.0" text="Add" />
-                        <Button layoutX="67.0" layoutY="57.0" mnemonicParsing="false" text="Remove" />
-                        <Label layoutX="395.0" layoutY="4.0" text="Letter" />
-                        <TextField layoutX="395.0" layoutY="21.0" prefHeight="26.0" prefWidth="39.0" />
+                        <CheckBox fx:id="checkNonNegative" layoutX="223.0" layoutY="76.0" mnemonicParsing="false" text="Non-negative" />
+                        <Label layoutX="393.0" layoutY="50.0" text="Dimension" AnchorPane.topAnchor="55.0" />
+                        <ComboBox fx:id="cbDimension" layoutX="390.0" layoutY="72.0" prefHeight="26.0" prefWidth="73.0" />
+                        <Label layoutX="492.0" layoutY="11.0" text="Upper bound" AnchorPane.topAnchor="10.0" />
+                        <Label layoutX="493.0" layoutY="58.0" text="Lower bound" AnchorPane.topAnchor="55.0" />
+                        <TextField fx:id="textUpperBound" layoutX="492.0" layoutY="26.0" prefHeight="26.0" prefWidth="85.0" />
+                        <TextField fx:id="textLowerBound" layoutX="493.0" layoutY="72.0" prefHeight="26.0" prefWidth="83.0" />
+                        <Button fx:id="buttonNewVariable" layoutX="65.0" layoutY="24.0" mnemonicParsing="false" onAction="#addEditVariable" prefHeight="26.0" prefWidth="93.0" text="New Variable" />
+                        <Button fx:id="buttonCancelVariable" layoutX="65.0" layoutY="57.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="93.0" text="Cancel" />
+                        <Label layoutX="390.0" layoutY="10.0" text="Letter" />
+                        <TextField fx:id="textLetter" layoutX="390.0" layoutY="27.0" prefHeight="26.0" prefWidth="39.0" />
                         <Label fx:id="labelEditVariable" layoutX="223.0" layoutY="6.0" text="Editing X:" />
                      </children>
                   </AnchorPane>
             </content>
           </Tab>
-          <Tab text="Data">
+          <Tab fx:id="tabData" text="Data">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
@@ -90,33 +92,41 @@
         </tabs>
       </TabPane>
       <TreeView layoutY="237.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="170.0" />
-      <AnchorPane fx:id="innerAnchorPane" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="170.0">
-         <children>
-            <Canvas fx:id="canvas" height="685.0" width="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-            <Label layoutX="14.0" layoutY="14.0" text="Main Function" />
-            <Label fx:id="lblConstraints" layoutX="14.0" layoutY="121.0" text="Constraints" />
-            <RadioButton fx:id="rdBtnMax" layoutX="9.0" layoutY="44.0" mnemonicParsing="false" text="Maximize" />
-            <RadioButton fx:id="rdBtnMin" layoutX="9.0" layoutY="70.0" mnemonicParsing="false" text="Minimize" />
-         </children>
-      </AnchorPane>
-      <Accordion layoutY="170.0">
+      <ScrollPane fx:id="scrollPane" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="200.0">
+         <content>
+            <AnchorPane fx:id="innerAnchorPane" prefHeight="500.0" prefWidth="800.0">
+               <children>
+                  <Canvas fx:id="canvas" height="645.0" width="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                  <Label layoutX="14.0" layoutY="14.0" text="Main Function" />
+                  <Label fx:id="lblConstraints" layoutX="14.0" layoutY="121.0" text="Constraints" />
+                  <RadioButton fx:id="rdBtnMax" layoutX="14.0" layoutY="52.0" mnemonicParsing="false" text="Max" />
+                  <RadioButton fx:id="rdBtnMin" layoutX="15.0" layoutY="80.0" mnemonicParsing="false" text="Min" />
+               </children>
+            </AnchorPane>
+         </content>
+      </ScrollPane>
+      <Accordion fx:id="accordionBase" layoutY="170.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="800.0">
         <panes>
-          <TitledPane animated="false" text="Variables">
+          <TitledPane fx:id="tpVariables" animated="false" text="Variables">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <ListView fx:id="lvVariables" layoutX="-22.0" layoutY="-34.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                     </children></AnchorPane>
+            </content>
+          </TitledPane>
+          <TitledPane fx:id="tpSets" animated="false" text="Set (for coefficients)">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
             </content>
           </TitledPane>
-          <TitledPane animated="false" text="Data">
-            <content>
-              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
-            </content>
-          </TitledPane>
-          <TitledPane animated="false" text="TBD">
+          <TitledPane fx:id="tpData" animated="false" text="Data (variable values)">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
             </content>
           </TitledPane>
         </panes>
       </Accordion>
+      <Button fx:id="buttonNewConstraint" layoutX="934.0" layoutY="170.0" mnemonicParsing="false" onAction="#addNewConstraint" prefHeight="30.0" prefWidth="152.0" text="Add new constraint" AnchorPane.rightAnchor="0.0" />
    </children>
 </AnchorPane>

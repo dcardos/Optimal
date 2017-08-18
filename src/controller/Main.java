@@ -23,7 +23,7 @@ public class Main extends Application {
     }
 
     public void mainWindow() throws IOException {
-        FXMLLoader loader = new FXMLLoader(Main.class.getResource("../view/mainWindowViewV2.fxml"));
+        FXMLLoader loader = new FXMLLoader(Main.class.getResource("/view/mainWindowViewV2.fxml"));
         AnchorPane pane = loader.load();
 
         MainWindowController mainWindowController = loader.getController();

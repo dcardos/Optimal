@@ -46,6 +46,10 @@ public class MainWindowController {
 
     private boolean newVariableFlag;
     private final ObservableList<String> variables = FXCollections.observableArrayList();
+    private final ObservableList<String> domains = FXCollections.observableArrayList(
+            "\u2115  Natural", "\u2124  Integer", "\u211a  Rational", "\u211d  Real");
+    private final ObservableList<String> dimensions = FXCollections.observableArrayList(
+            "1", "2", "3", "4", "5");
 
     @FXML private Label labelEditVariable;
     @FXML private Canvas canvas;
@@ -63,6 +67,8 @@ public class MainWindowController {
     // variable tab
     @FXML private Button buttonNewVariable;
     @FXML private Button buttonCancelVariable;
+    @FXML private Button buttonEditVariable;
+    @FXML private Button buttonNewCoefficient;
     @FXML private ComboBox cbDomain;
     @FXML private CheckBox checkNonNegative;
     @FXML private TextField textLetter;
@@ -72,17 +78,24 @@ public class MainWindowController {
     // Accordion and TitledPanes
     @FXML private Accordion accordionBase;
     @FXML private TitledPane tpVariables;
+    @FXML private TitledPane tpCoefficients;
     @FXML private TitledPane tpSets;
     @FXML private TitledPane tpData;
     @FXML private ListView lvVariables;
+    @FXML private ListView lvCoefficients;
 
 
     public void setMain(Main main) throws Exception {
         mMain = main;
         newVariableFlag = true; // none to edit here
         buttonCancelVariable.setDisable(true);
+        buttonEditVariable.setDisable(true);
         disableVariableFields(true);
         lvVariables.setItems(variables);
+        cbDomain.setItems(domains);
+        cbDimension.setItems(dimensions);
+        cbDomain.setValue(cbDomain.getItems().get(0));
+        cbDimension.setValue(cbDimension.getItems().get(0));
 
         labelEditVariable.setText("Editing Sum: \u2211");
         innerAnchorPane.setStyle("-fx-background-color: #FFFFFF");
@@ -363,21 +376,38 @@ public class MainWindowController {
         }
     }
 
-    public void addEditVariable() {
-        if (newVariableFlag) {
-            newVariableFlag = false;
-            disableVariableFields(false);
-            buttonNewVariable.setText("Confirm");
-        } else {
-            if (textLetter.getText().length() > 0) {
-                variables.add(textLetter.getText());
+    public void addNewVariable() {
+        newVariableFlag = true;
+        buttonEditVariable.setText("Confirm");
+        buttonEditVariable.setDisable(false);
+        buttonCancelVariable.setDisable(false);
+        buttonNewVariable.setDisable(true);
+        buttonNewCoefficient.setDisable(true);
+        disableVariableFields(false);
+    }
+
+    public void addNewCoefficient() {}
+
+    public void editVarOrCoef() {
+        if (newVariableFlag) {  // confirm button
+            if (cbDomain.getValue() != null &&
+                    cbDimension.getValue() != null && textLetter.getText().length() > 0 ) {
+                variables.add(textLetter.getText() + " \u2208 " + cbDomain.getValue().toString().charAt(0)
+                + ", " + cbDimension.getValue().toString() + " dimension");
                 accordionBase.setExpandedPane(tpVariables);
-                lvVariables.getSelectionModel().selectLast();
+                lvVariables.getSelectionModel().selectLast();   // needed?
                 lvVariables.scrollTo(lvVariables.getItems().size()-1);
+
+                disableVariableFields(true);
+//            buttonEditVariable.setText("Edit"); // needed?
+                buttonNewVariable.setDisable(false);
+                buttonNewCoefficient.setDisable(false);
+                buttonCancelVariable.setDisable(true);
             }
         }
-
     }
+
+    public void cancelVarOrCoef() {}
 
     private void disableVariableFields(boolean arg) {
         cbDomain.setDisable(arg);

@@ -117,15 +117,13 @@ public class MainWindowController {
         editVariableFlag = false;
         buttonCancelVariable.setDisable(true);
         buttonEditVariable.setDisable(true);
-        disableVariableFields(true);
+        disableVariableFields(true, false);
         lvVariables.setItems(observableVariableList);
         lvCoefficients.setItems(observableCoefficientList);
         cbDomain.setItems(observableDomainList);
         cbDimension.setItems(observableDimensionList);
         cbLetter.setItems(letters);
-        cbDomain.setValue(cbDomain.getItems().get(0));
-        cbDimension.setValue(cbDimension.getItems().get(0));
-        cbLetter.setValue(cbLetter.getItems().get(23));
+        resetVarCoefFields();
         lblPrompt.setText("");
 
         // force the field to be numeric only
@@ -171,12 +169,26 @@ public class MainWindowController {
                 indexVarOrCoef = lvVariables.getSelectionModel().getSelectedIndex();
                 if (indexVarOrCoef > -1) {
                     editVariableFlag = true;
+                    editCoefficientFlag = false;
                     cbDomain.setValue(mVariables.get(indexVarOrCoef).getDomain());
                     checkNonNegative.setSelected(mVariables.get(indexVarOrCoef).isNonNegative());
                     cbLetter.setValue(mVariables.get(indexVarOrCoef).getLetter());
                     cbDimension.setValue(mVariables.get(indexVarOrCoef).getDimension());
-                    textUpperBound.setText(String.valueOf(mVariables.get(indexVarOrCoef).getUpperBound()));
-                    textLowerBound.setText(String.valueOf(mVariables.get(indexVarOrCoef).getLowerBound()));
+                    String bound;
+                    if (mVariables.get(indexVarOrCoef).getUpperBound() != null) {
+                        bound = String.valueOf(mVariables.get(indexVarOrCoef).getUpperBound());
+                        if (bound.matches(".*\\.0*$"))   // is an integer?
+                            bound = bound.replaceAll("\\.0*$", "");
+                        textUpperBound.setText(bound);
+                    } else
+                        textUpperBound.clear();
+                    if (mVariables.get(indexVarOrCoef).getLowerBound() != null) {
+                        bound = String.valueOf(mVariables.get(indexVarOrCoef).getLowerBound());
+                        if (bound.matches(".*\\.0*$"))   // is an integer?
+                            bound = bound.replaceAll("\\.0*$", "");
+                        textLowerBound.setText(bound);
+                    } else
+                        textLowerBound.clear();
                 }
             }
         });
@@ -186,8 +198,11 @@ public class MainWindowController {
                 indexVarOrCoef = lvCoefficients.getSelectionModel().getSelectedIndex();
                 if (indexVarOrCoef > -1) {
                     editCoefficientFlag = true;
+                    editVariableFlag = false;
                     cbLetter.setValue(mCoefficients.get(indexVarOrCoef).getLetter());
                     cbDimension.setValue(mCoefficients.get(indexVarOrCoef).getDimension());
+                    textUpperBound.clear();
+                    textLowerBound.clear();
                 }
             }
         });
@@ -439,6 +454,15 @@ public class MainWindowController {
 
     }
 
+    private void resetVarCoefFields() {
+        cbDomain.setValue(cbDomain.getItems().get(0));
+        cbDimension.setValue(cbDimension.getItems().get(0));
+        cbLetter.setValue(cbLetter.getItems().get(23));
+        textLowerBound.clear();
+        textUpperBound.clear();
+        checkNonNegative.setSelected(false);
+    }
+
     public void addNewConstraint() {
         Formula newConstraint = new Formula(FormulasPositionSet.mConstraintStartXPosition,
                 FormulasPositionSet.mFirstConstraintStartYPosition +
@@ -455,6 +479,7 @@ public class MainWindowController {
     }
 
     public void addNewVariable() {
+        resetVarCoefFields();
         newVariableFlag = true;
         lblPrompt.setText("New variable parameters");
         buttonEditVariable.setText("Confirm");
@@ -462,10 +487,11 @@ public class MainWindowController {
         buttonCancelVariable.setDisable(false);
         buttonNewVariable.setDisable(true);
         buttonNewCoefficient.setDisable(true);
-        disableVariableFields(false);
+        disableVariableFields(false, false);
     }
 
     public void addNewCoefficient() {
+        resetVarCoefFields();
         newCoefficientFlag = true;
         lblPrompt.setText("New Coefficient parameters");
         buttonEditVariable.setText("Confirm");
@@ -474,10 +500,7 @@ public class MainWindowController {
         buttonNewVariable.setDisable(true);
         buttonNewCoefficient.setDisable(true);
 
-        cbLetter.setDisable(false);
-        lblLetter.setDisable(false);
-        cbDimension.setDisable(false);
-        lblDimension.setDisable(false);
+        disableVariableFields(false, true);
     }
 
     public void editVarOrCoef() {
@@ -488,15 +511,19 @@ public class MainWindowController {
                         cbDomain.getValue().toString().trim().charAt(0), checkNonNegative.isSelected());
                 if (textUpperBound.getText().length() > 0)
                     var.setUpperBound(Double.parseDouble(textUpperBound.getText()));
+                else
+                    var.setUpperBound(null);
                 if (textLowerBound.getText().length() > 0)
                     var.setLowerBound(Double.parseDouble(textLowerBound.getText()));
+                else
+                    var.setLowerBound(null);
                 mVariables.add(var);
                 observableVariableList.add(var.getLetter() + " \u2208 " + var.getDomain() + ", " + var.getDimension() + " dimension");
                 accordionBase.setExpandedPane(tpVariables);
                 lvVariables.getSelectionModel().selectLast();   // needed?
                 lvVariables.scrollTo(lvVariables.getItems().size() - 1);
 
-                disableVariableFields(true);
+                disableVariableFields(true, false);
                 buttonEditVariable.setText("Edit");
                 buttonNewVariable.setDisable(false);
                 buttonNewCoefficient.setDisable(false);
@@ -504,6 +531,7 @@ public class MainWindowController {
                 newVariableFlag = false;
                 lblPrompt.setText("Variable " + var.getLetter() + " selected");
                 editVariableFlag = true;
+                editCoefficientFlag = false;
                 indexVarOrCoef = lvVariables.getItems().size() - 1;
             }
         } else if (newCoefficientFlag) {    // confirm button after new coefficient clicked
@@ -516,7 +544,7 @@ public class MainWindowController {
             lvCoefficients.getSelectionModel().selectLast();
             lvCoefficients.scrollTo(lvCoefficients.getItems().size()-1);
 
-            disableVariableFields(true);
+            disableVariableFields(true, true);
             buttonEditVariable.setText("Edit");
             buttonNewVariable.setDisable(false);
             buttonNewCoefficient.setDisable(false);
@@ -524,6 +552,7 @@ public class MainWindowController {
             newCoefficientFlag = false;
             lblPrompt.setText("Coefficient " + coef.getLetter() + " selected");
             editCoefficientFlag = true;
+            editVariableFlag = false;
             indexVarOrCoef = lvCoefficients.getItems().size() - 1;
         } else if (buttonEditVariable.getText().equalsIgnoreCase("edit")){    // edit button after
             if (editVariableFlag) {     // a variable is clicked
@@ -533,11 +562,20 @@ public class MainWindowController {
                     buttonCancelVariable.setDisable(false);
                     buttonNewVariable.setDisable(true);
                     buttonNewCoefficient.setDisable(true);
-                    disableVariableFields(false);
+                    disableVariableFields(false, false);
+                }
+            } else if (editCoefficientFlag) {   // a coefficient is clicked
+                if (indexVarOrCoef < mCoefficients.size()) {
+                    lblPrompt.setText("Editing coefficient " + mCoefficients.get(indexVarOrCoef).getLetter());
+                    buttonEditVariable.setText("Confirm");
+                    buttonCancelVariable.setDisable(false);
+                    buttonNewVariable.setDisable(true);
+                    buttonNewCoefficient.setDisable(true);
+                    disableVariableFields(false, true);
                 }
             }
         } else {    // confirm an edition
-            if (editVariableFlag) {
+            if (editVariableFlag) {     // done editing variable
                 if (checkBoundTextFields()) {
                     mVariables.get(indexVarOrCoef).setLetter(cbLetter.getValue().toString().charAt(0));
                     mVariables.get(indexVarOrCoef).setDimension(Integer.parseInt(cbDimension.getValue().toString()));
@@ -550,15 +588,28 @@ public class MainWindowController {
                     Variable var = mVariables.get(indexVarOrCoef);
                     observableVariableList.set(indexVarOrCoef,
                             var.getLetter() + " \u2208 " + var.getDomain() + ", " + var.getDimension() + " dimension");
-                    editVariableFlag = false;
+                    disableVariableFields(true, false);
+                    buttonEditVariable.setText("Edit");
+                    buttonNewVariable.setDisable(false);
+                    buttonNewCoefficient.setDisable(false);
+                    buttonCancelVariable.setDisable(true);
+                    lblPrompt.setText("");
+                    editCoefficientFlag = false;
                 }
+            } else if (editCoefficientFlag) {   // done editing coefficient
+                mCoefficients.get(indexVarOrCoef).setLetter(cbLetter.getValue().toString().charAt(0));
+                mCoefficients.get(indexVarOrCoef).setDimension(Integer.parseInt(cbDimension.getValue().toString()));
+                model.Coefficient coef = mCoefficients.get(indexVarOrCoef);
+                observableCoefficientList.set(indexVarOrCoef,
+                        coef.getLetter() + ", " + coef.getDimension() + " dimension");
+                disableVariableFields(true, true);
+                buttonEditVariable.setText("Edit");
+                buttonNewVariable.setDisable(false);
+                buttonNewCoefficient.setDisable(false);
+                buttonCancelVariable.setDisable(true);
+                lblPrompt.setText("");
+                editVariableFlag = false;
             }
-            disableVariableFields(true);
-            buttonEditVariable.setText("Edit");
-            buttonNewVariable.setDisable(false);
-            buttonNewCoefficient.setDisable(false);
-            buttonCancelVariable.setDisable(true);
-            lblPrompt.setText("");
         }
     }
 
@@ -567,21 +618,23 @@ public class MainWindowController {
         alert.setTitle("Something is wrong");
         alert.setHeaderText(null);
         if (textLowerBound.getText().matches("[-+]$|.*\\.$")) {
-            alert.setContentText("Invalid lower bound value");
+            alert.setContentText("Invalid lower bound value.");
             alert.showAndWait();
             return false;
         } else if (textUpperBound.getText().matches("[-+]$|.*\\.$")) {
-            alert.setContentText("Invalid upper bound value");
+            alert.setContentText("Invalid upper bound value.");
             alert.showAndWait();
             return false;
-        } else if (checkNonNegative.isSelected() && Double.valueOf(textUpperBound.getText()) <= 0) {
+        } else if (checkNonNegative.isSelected() && textUpperBound.getText().length() > 0 &&
+                Double.valueOf(textUpperBound.getText()) <= 0) {
             alert.setContentText("Invalid upper bound value: since the variable is non-negative, " +
-                    "the upper limit has to be at least more than 0");
+                    "the upper limit has to be at least more than 0.");
             alert.showAndWait();
             return false;
-        } else if (checkNonNegative.isSelected() && Double.valueOf(textLowerBound.getText()) < 0) {
+        } else if (checkNonNegative.isSelected() && textLowerBound.getText().length() > 0 &&
+                Double.valueOf(textLowerBound.getText()) < 0) {
             alert.setContentText("Check the lower bound value: since the variable is non-negative, " +
-                    "the lower limit will be set to 0 instead of " + textLowerBound.getText());
+                    "the lower limit will be set to 0 instead of " + textLowerBound.getText() + ".");
             alert.showAndWait();
             textLowerBound.setText("0");
             return false;
@@ -590,7 +643,7 @@ public class MainWindowController {
             int integer = (int)Double.parseDouble(textLowerBound.getText());
             alert.setContentText("Check the lower bound value: since " + cbLetter.getValue().toString() +
                     " \u2208 " + cbDomain.getValue().toString().charAt(0) + " the lower limit will be set to " +
-                    integer + " instead of " + textLowerBound.getText());
+                    integer + " instead of " + textLowerBound.getText() + ".");
             alert.showAndWait();
             textLowerBound.setText(String.valueOf(integer));
             return false;
@@ -599,9 +652,14 @@ public class MainWindowController {
             int integer = (int)Double.parseDouble(textUpperBound.getText());
             alert.setContentText("Check the upper bound value: since " + cbLetter.getValue().toString() +
                     " \u2208 " + cbDomain.getValue().toString().charAt(0) + " the upper limit will be set to " +
-                    integer + " instead of " + textUpperBound.getText());
+                    integer + " instead of " + textUpperBound.getText() + ".");
             alert.showAndWait();
             textUpperBound.setText(String.valueOf(integer));
+            return false;
+        } else if (textLowerBound.getText().length() > 0 && textUpperBound.getText().length() > 0 &&
+                Double.parseDouble(textLowerBound.getText()) >= Double.parseDouble(textUpperBound.getText())) {
+            alert.setContentText("Lower bound has to be set to a value lower than the upper bound.");
+            alert.showAndWait();
             return false;
         }
         return true;
@@ -609,18 +667,24 @@ public class MainWindowController {
 
     public void cancelVarOrCoef() {}
 
-    private void disableVariableFields(boolean arg) {
-        cbDomain.setDisable(arg);
-        lblDomain.setDisable(arg);
-        checkNonNegative.setDisable(arg);
+    private void disableVariableFields(boolean arg, boolean coef) {
+        if (!coef) {    // change these when variable
+            cbDomain.setDisable(arg);
+            lblDomain.setDisable(arg);
+            checkNonNegative.setDisable(arg);
+            textUpperBound.setDisable(arg);
+            lblUpperBound.setDisable(arg);
+            textLowerBound.setDisable(arg);
+            lblLowerBound.setDisable(arg);
+        }
         cbLetter.setDisable(arg);
         lblLetter.setDisable(arg);
         cbDimension.setDisable(arg);
         lblDimension.setDisable(arg);
-        textUpperBound.setDisable(arg);
-        lblUpperBound.setDisable(arg);
-        textLowerBound.setDisable(arg);
-        lblLowerBound.setDisable(arg);
+        // the opposite of var or coefficient fields
+        accordionBase.setDisable(!arg);
+        tabData.setDisable(!arg);
+        tabModel.setDisable(!arg);
     }
 
     public void closeWindow() {

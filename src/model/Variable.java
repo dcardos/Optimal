@@ -3,8 +3,8 @@ package model;
 public class Variable extends Coefficient{
     private char domain;
     private boolean nonNegative;
-    private double upperBound;
-    private double lowerBound;
+    private Double upperBound;
+    private Double lowerBound;
 
     public Variable(char letter, int dimension, char domain, boolean nonNegative) {
         super(letter, dimension);
@@ -28,19 +28,19 @@ public class Variable extends Coefficient{
         this.nonNegative = nonNegative;
     }
 
-    public double getUpperBound() {
+    public Double getUpperBound() {
         return upperBound;
     }
 
-    public void setUpperBound(double upperBound) {
+    public void setUpperBound(Double upperBound) {
         this.upperBound = upperBound;
     }
 
-    public double getLowerBound() {
+    public Double getLowerBound() {
         return lowerBound;
     }
 
-    public void setLowerBound(double lowerBound) {
+    public void setLowerBound(Double lowerBound) {
         this.lowerBound = lowerBound;
     }
 }

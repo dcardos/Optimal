@@ -1,12 +1,15 @@
 package controller;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.control.Button;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
@@ -23,6 +26,7 @@ import javafx.scene.text.TextAlignment;
 import javafx.util.Pair;
 import model.Formula;
 import model.MathElement;
+import model.Variable;
 import model.math.*;
 import org.jetbrains.annotations.Contract;
 import org.jfree.fx.FXGraphics2D;
@@ -30,6 +34,7 @@ import org.jfree.fx.FXGraphics2D;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.TreeSet;
 import java.util.Vector;
@@ -42,16 +47,33 @@ public class MainWindowController {
     private TreeSet<Formula> formulas;
     private Formula lastModifiedFormula;
     private MathElement beingDragged;
+    private final ArrayList<Variable> mVariables = new ArrayList<>();
+    private final ArrayList<model.Coefficient> mCoefficients = new ArrayList<>();
+
     private final ToggleGroup mMaxMin = new ToggleGroup();
 
     private boolean newVariableFlag;
-    private final ObservableList<String> variables = FXCollections.observableArrayList();
-    private final ObservableList<String> domains = FXCollections.observableArrayList(
+    private boolean newCoefficientFlag;
+    private boolean editVariableFlag;
+    private boolean editCoefficientFlag;
+    private int indexVarOrCoef;
+    private final ObservableList<String> observableVariableList = FXCollections.observableArrayList();
+    private final ObservableList<String> observableCoefficientList = FXCollections.observableArrayList();
+    private final ObservableList<String> observableDomainList = FXCollections.observableArrayList(
             "\u2115  Natural", "\u2124  Integer", "\u211a  Rational", "\u211d  Real");
-    private final ObservableList<String> dimensions = FXCollections.observableArrayList(
+    private final ObservableList<String> observableDimensionList = FXCollections.observableArrayList(
             "1", "2", "3", "4", "5");
+    private final ObservableList<String> letters = FXCollections.observableArrayList(
+            "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
+                    "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z");
 
-    @FXML private Label labelEditVariable;
+
+    @FXML private Label lblPrompt;
+    @FXML private Label lblLetter;
+    @FXML private Label lblDomain;
+    @FXML private Label lblDimension;
+    @FXML private Label lblUpperBound;
+    @FXML private Label lblLowerBound;
     @FXML private Canvas canvas;
     @FXML private AnchorPane innerAnchorPane;
     @FXML private AnchorPane anchorPaneModel;
@@ -71,7 +93,7 @@ public class MainWindowController {
     @FXML private Button buttonNewCoefficient;
     @FXML private ComboBox cbDomain;
     @FXML private CheckBox checkNonNegative;
-    @FXML private TextField textLetter;
+    @FXML private ComboBox cbLetter;
     @FXML private ComboBox cbDimension;
     @FXML private TextField textUpperBound;
     @FXML private TextField textLowerBound;
@@ -87,17 +109,45 @@ public class MainWindowController {
 
     public void setMain(Main main) throws Exception {
         mMain = main;
-        newVariableFlag = true; // none to edit here
+
+        // Initializing variables and fields
+        newVariableFlag = false;
+        newCoefficientFlag = false;
+        editCoefficientFlag = false;
+        editVariableFlag = false;
         buttonCancelVariable.setDisable(true);
         buttonEditVariable.setDisable(true);
         disableVariableFields(true);
-        lvVariables.setItems(variables);
-        cbDomain.setItems(domains);
-        cbDimension.setItems(dimensions);
+        lvVariables.setItems(observableVariableList);
+        lvCoefficients.setItems(observableCoefficientList);
+        cbDomain.setItems(observableDomainList);
+        cbDimension.setItems(observableDimensionList);
+        cbLetter.setItems(letters);
         cbDomain.setValue(cbDomain.getItems().get(0));
         cbDimension.setValue(cbDimension.getItems().get(0));
+        cbLetter.setValue(cbLetter.getItems().get(23));
+        lblPrompt.setText("");
 
-        labelEditVariable.setText("Editing Sum: \u2211");
+        // force the field to be numeric only
+        textLowerBound.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                if (!newValue.matches("[-+]$|[^.]*[0-9]\\.$") && !newValue.matches("^[-+]?[0-9]\\d*(\\.\\d+)?$")) {
+                    if (newValue.length() > 0)
+                        textLowerBound.setText(newValue.substring(0, newValue.length() - 1));
+                }
+            }
+        });
+        textUpperBound.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                if (!newValue.matches("[-+]$|[^.]*[0-9]\\.$") && !newValue.matches("^[-+]?[0-9]\\d*(\\.\\d+)?$")) {
+                    if (newValue.length() > 0)
+                        textUpperBound.setText(newValue.substring(0, newValue.length() - 1));
+                }
+            }
+        });
+
         innerAnchorPane.setStyle("-fx-background-color: #FFFFFF");
 
         // Initializing fonts for LateX
@@ -113,6 +163,34 @@ public class MainWindowController {
 
         // Initializing button for new formula
         buttonNewConstraint.setDisable(true);
+
+        // Adding listeners to the listView on titled pane
+        lvVariables.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                indexVarOrCoef = lvVariables.getSelectionModel().getSelectedIndex();
+                if (indexVarOrCoef > -1) {
+                    editVariableFlag = true;
+                    cbDomain.setValue(mVariables.get(indexVarOrCoef).getDomain());
+                    checkNonNegative.setSelected(mVariables.get(indexVarOrCoef).isNonNegative());
+                    cbLetter.setValue(mVariables.get(indexVarOrCoef).getLetter());
+                    cbDimension.setValue(mVariables.get(indexVarOrCoef).getDimension());
+                    textUpperBound.setText(String.valueOf(mVariables.get(indexVarOrCoef).getUpperBound()));
+                    textLowerBound.setText(String.valueOf(mVariables.get(indexVarOrCoef).getLowerBound()));
+                }
+            }
+        });
+        lvCoefficients.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                indexVarOrCoef = lvCoefficients.getSelectionModel().getSelectedIndex();
+                if (indexVarOrCoef > -1) {
+                    editCoefficientFlag = true;
+                    cbLetter.setValue(mCoefficients.get(indexVarOrCoef).getLetter());
+                    cbDimension.setValue(mCoefficients.get(indexVarOrCoef).getDimension());
+                }
+            }
+        });
 
         // Initializing formulas
         this.formulas = new TreeSet<>();
@@ -378,6 +456,7 @@ public class MainWindowController {
 
     public void addNewVariable() {
         newVariableFlag = true;
+        lblPrompt.setText("New variable parameters");
         buttonEditVariable.setText("Confirm");
         buttonEditVariable.setDisable(false);
         buttonCancelVariable.setDisable(false);
@@ -386,36 +465,162 @@ public class MainWindowController {
         disableVariableFields(false);
     }
 
-    public void addNewCoefficient() {}
+    public void addNewCoefficient() {
+        newCoefficientFlag = true;
+        lblPrompt.setText("New Coefficient parameters");
+        buttonEditVariable.setText("Confirm");
+        buttonEditVariable.setDisable(false);
+        buttonCancelVariable.setDisable(false);
+        buttonNewVariable.setDisable(true);
+        buttonNewCoefficient.setDisable(true);
+
+        cbLetter.setDisable(false);
+        lblLetter.setDisable(false);
+        cbDimension.setDisable(false);
+        lblDimension.setDisable(false);
+    }
 
     public void editVarOrCoef() {
-        if (newVariableFlag) {  // confirm button
-            if (cbDomain.getValue() != null &&
-                    cbDimension.getValue() != null && textLetter.getText().length() > 0 ) {
-                variables.add(textLetter.getText() + " \u2208 " + cbDomain.getValue().toString().charAt(0)
-                + ", " + cbDimension.getValue().toString() + " dimension");
+        if (newVariableFlag) {  // confirm button after new variable clicked
+            if (checkBoundTextFields()) {
+                Variable var = new Variable(cbLetter.getValue().toString().trim().charAt(0),
+                        Integer.parseInt(cbDimension.getValue().toString()),
+                        cbDomain.getValue().toString().trim().charAt(0), checkNonNegative.isSelected());
+                if (textUpperBound.getText().length() > 0)
+                    var.setUpperBound(Double.parseDouble(textUpperBound.getText()));
+                if (textLowerBound.getText().length() > 0)
+                    var.setLowerBound(Double.parseDouble(textLowerBound.getText()));
+                mVariables.add(var);
+                observableVariableList.add(var.getLetter() + " \u2208 " + var.getDomain() + ", " + var.getDimension() + " dimension");
                 accordionBase.setExpandedPane(tpVariables);
                 lvVariables.getSelectionModel().selectLast();   // needed?
-                lvVariables.scrollTo(lvVariables.getItems().size()-1);
+                lvVariables.scrollTo(lvVariables.getItems().size() - 1);
 
                 disableVariableFields(true);
-//            buttonEditVariable.setText("Edit"); // needed?
+                buttonEditVariable.setText("Edit");
                 buttonNewVariable.setDisable(false);
                 buttonNewCoefficient.setDisable(false);
                 buttonCancelVariable.setDisable(true);
+                newVariableFlag = false;
+                lblPrompt.setText("Variable " + var.getLetter() + " selected");
+                editVariableFlag = true;
+                indexVarOrCoef = lvVariables.getItems().size() - 1;
             }
+        } else if (newCoefficientFlag) {    // confirm button after new coefficient clicked
+            model.Coefficient coef = new model.Coefficient(cbLetter.getValue().toString().charAt(0),
+                    Integer.parseInt(cbDimension.getValue().toString()));
+            mCoefficients.add(coef);
+
+            observableCoefficientList.add(coef.getLetter() + ", " + coef.getDimension() + " dimension");
+            accordionBase.setExpandedPane(tpCoefficients);
+            lvCoefficients.getSelectionModel().selectLast();
+            lvCoefficients.scrollTo(lvCoefficients.getItems().size()-1);
+
+            disableVariableFields(true);
+            buttonEditVariable.setText("Edit");
+            buttonNewVariable.setDisable(false);
+            buttonNewCoefficient.setDisable(false);
+            buttonCancelVariable.setDisable(true);
+            newCoefficientFlag = false;
+            lblPrompt.setText("Coefficient " + coef.getLetter() + " selected");
+            editCoefficientFlag = true;
+            indexVarOrCoef = lvCoefficients.getItems().size() - 1;
+        } else if (buttonEditVariable.getText().equalsIgnoreCase("edit")){    // edit button after
+            if (editVariableFlag) {     // a variable is clicked
+                if (indexVarOrCoef < mVariables.size()) {   // just reassuring index is within bounds
+                    lblPrompt.setText("Editing variable " + mVariables.get(indexVarOrCoef).getLetter());
+                    buttonEditVariable.setText("Confirm");
+                    buttonCancelVariable.setDisable(false);
+                    buttonNewVariable.setDisable(true);
+                    buttonNewCoefficient.setDisable(true);
+                    disableVariableFields(false);
+                }
+            }
+        } else {    // confirm an edition
+            if (editVariableFlag) {
+                if (checkBoundTextFields()) {
+                    mVariables.get(indexVarOrCoef).setLetter(cbLetter.getValue().toString().charAt(0));
+                    mVariables.get(indexVarOrCoef).setDimension(Integer.parseInt(cbDimension.getValue().toString()));
+                    mVariables.get(indexVarOrCoef).setDomain(cbDomain.getValue().toString().trim().charAt(0));
+                    mVariables.get(indexVarOrCoef).setNonNegative(checkNonNegative.isSelected());
+                    if (textUpperBound.getText().length() > 0)
+                        mVariables.get(indexVarOrCoef).setUpperBound(Double.parseDouble(textUpperBound.getText()));
+                    if (textLowerBound.getText().length() > 0)
+                        mVariables.get(indexVarOrCoef).setLowerBound(Double.parseDouble(textLowerBound.getText()));
+                    Variable var = mVariables.get(indexVarOrCoef);
+                    observableVariableList.set(indexVarOrCoef,
+                            var.getLetter() + " \u2208 " + var.getDomain() + ", " + var.getDimension() + " dimension");
+                    editVariableFlag = false;
+                }
+            }
+            disableVariableFields(true);
+            buttonEditVariable.setText("Edit");
+            buttonNewVariable.setDisable(false);
+            buttonNewCoefficient.setDisable(false);
+            buttonCancelVariable.setDisable(true);
+            lblPrompt.setText("");
         }
+    }
+
+    private boolean checkBoundTextFields() {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Something is wrong");
+        alert.setHeaderText(null);
+        if (textLowerBound.getText().matches("[-+]$|.*\\.$")) {
+            alert.setContentText("Invalid lower bound value");
+            alert.showAndWait();
+            return false;
+        } else if (textUpperBound.getText().matches("[-+]$|.*\\.$")) {
+            alert.setContentText("Invalid upper bound value");
+            alert.showAndWait();
+            return false;
+        } else if (checkNonNegative.isSelected() && Double.valueOf(textUpperBound.getText()) <= 0) {
+            alert.setContentText("Invalid upper bound value: since the variable is non-negative, " +
+                    "the upper limit has to be at least more than 0");
+            alert.showAndWait();
+            return false;
+        } else if (checkNonNegative.isSelected() && Double.valueOf(textLowerBound.getText()) < 0) {
+            alert.setContentText("Check the lower bound value: since the variable is non-negative, " +
+                    "the lower limit will be set to 0 instead of " + textLowerBound.getText());
+            alert.showAndWait();
+            textLowerBound.setText("0");
+            return false;
+        } else if ((cbDomain.getValue().toString().charAt(0) == '\u2115' || cbDomain.getValue().toString().charAt(0) == '\u2124')
+                && textLowerBound.getText().contains(".")) {
+            int integer = (int)Double.parseDouble(textLowerBound.getText());
+            alert.setContentText("Check the lower bound value: since " + cbLetter.getValue().toString() +
+                    " \u2208 " + cbDomain.getValue().toString().charAt(0) + " the lower limit will be set to " +
+                    integer + " instead of " + textLowerBound.getText());
+            alert.showAndWait();
+            textLowerBound.setText(String.valueOf(integer));
+            return false;
+        } else if ((cbDomain.getValue().toString().charAt(0) == '\u2115' || cbDomain.getValue().toString().charAt(0) == '\u2124')
+                && textUpperBound.getText().contains(".")) {
+            int integer = (int)Double.parseDouble(textUpperBound.getText());
+            alert.setContentText("Check the upper bound value: since " + cbLetter.getValue().toString() +
+                    " \u2208 " + cbDomain.getValue().toString().charAt(0) + " the upper limit will be set to " +
+                    integer + " instead of " + textUpperBound.getText());
+            alert.showAndWait();
+            textUpperBound.setText(String.valueOf(integer));
+            return false;
+        }
+        return true;
     }
 
     public void cancelVarOrCoef() {}
 
     private void disableVariableFields(boolean arg) {
         cbDomain.setDisable(arg);
+        lblDomain.setDisable(arg);
         checkNonNegative.setDisable(arg);
-        textLetter.setDisable(arg);
+        cbLetter.setDisable(arg);
+        lblLetter.setDisable(arg);
         cbDimension.setDisable(arg);
+        lblDimension.setDisable(arg);
         textUpperBound.setDisable(arg);
+        lblUpperBound.setDisable(arg);
         textLowerBound.setDisable(arg);
+        lblLowerBound.setDisable(arg);
     }
 
     public void closeWindow() {

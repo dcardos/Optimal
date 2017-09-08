@@ -1,6 +1,8 @@
 package model;
 
-public class Coefficient {
+import org.jetbrains.annotations.NotNull;
+
+public class Coefficient implements Comparable<Coefficient>{
     private char letter;
     private int dimension;
     private double[] data;
@@ -32,5 +34,10 @@ public class Coefficient {
 
     public void setData(double[] data) {
         this.data = data;
+    }
+
+    @Override
+    public int compareTo(@NotNull Coefficient o) {
+        return Character.compare(this.getLetter(), o.getLetter());
     }
 }

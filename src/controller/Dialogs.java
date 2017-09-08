@@ -134,7 +134,7 @@ public class Dialogs {
         if (resultFromDialogs) {
             List<String> inputs = result.get();
             ((Summation) mathElement.getExpression())
-                    .setStartingPointFromPrimitives(inputs.get(2), Integer.valueOf(inputs.get(0)));
+                    .setStartingPointFromPrimitives(inputs.get(2).trim().charAt(0), Integer.valueOf(inputs.get(0)));
             ((Summation) mathElement.getExpression())
                     .setStoppingPointFromInt(Integer.valueOf(inputs.get(1)));
             formula.setLastMathElementModified(mathElement);

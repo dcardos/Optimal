@@ -1,5 +1,6 @@
 package model;
 
+import javafx.scene.image.ImageView;
 import model.math.Expression;
 import org.scilab.forge.jlatexmath.TeXConstants;
 import org.scilab.forge.jlatexmath.TeXFormula;
@@ -25,6 +26,7 @@ public class MathElement implements Comparable<MathElement>{
     private TeXFormula mTeXFormula;
     private TeXIcon mIcon;  // to draw element
     private Color mColor;
+    private final ImageView mImageView;
 
     public MathElement(Expression expression) {
         mId = counter++;
@@ -40,19 +42,21 @@ public class MathElement implements Comparable<MathElement>{
         mXCenter = (mXStart + mXEnd)/2;
         mYCenter = (mYStart + mYEnd)/2;
         mColor = Color.black;
+        mImageView = new ImageView();
     }
 
     public MathElement(MathElement mathElement, Expression expression) {
         mId = counter++;
         mXStart = mathElement.getXStart();
         mYStart = mathElement.getYStart();
-        mExpression = expression;           // Careful here, can be a reference instead of new expression
+        mExpression = expression;           // Careful here, is a reference instead of new expression
         mXEnd = mathElement.getXEnd();
         mYEnd = mathElement.getYEnd();
         mXCenter = mathElement.getXCenter();
         mYCenter = mathElement.getYCenter();
         mColor = Color.black;
         updateIcon(mYCenter);
+        mImageView = new ImageView();
     }
 
     public int getId() {
@@ -142,6 +146,10 @@ public class MathElement implements Comparable<MathElement>{
 //        If X position changes then all elements should do too
 //        mXEnd = mXStart + mWidth - 1;
 //        mXCenter = (mXStart + mXEnd)/2;
+    }
+
+    public ImageView getImageView() {
+        return mImageView;
     }
 
     @Override

@@ -54,11 +54,11 @@
                         <Label fx:id="lblLowerBound" layoutX="573.0" layoutY="60.0" text="Lower bound" AnchorPane.topAnchor="60.0" />
                         <TextField fx:id="textUpperBound" layoutX="573.0" layoutY="28.0" prefHeight="26.0" prefWidth="85.0" />
                         <TextField fx:id="textLowerBound" layoutX="573.0" layoutY="77.0" prefHeight="26.0" prefWidth="83.0" />
-                        <Button fx:id="buttonNewVariable" layoutX="15.0" layoutY="24.0" mnemonicParsing="false" onAction="#addNewVariable" prefHeight="25.0" prefWidth="100.0" text="New Variable" />
-                        <Button fx:id="buttonEditVariable" layoutX="123.0" layoutY="24.0" mnemonicParsing="false" onAction="#editVarOrCoef" prefHeight="25.0" prefWidth="100.0" text="Edit" />
+                        <Button fx:id="buttonNewVariable" layoutX="15.0" layoutY="24.0" mnemonicParsing="false" onAction="#prepareToAddNewVariable" prefHeight="25.0" prefWidth="100.0" text="New Variable" />
+                        <Button fx:id="buttonEditVariable" layoutX="123.0" layoutY="24.0" mnemonicParsing="false" onAction="#addEditVarOrCoef" prefHeight="25.0" prefWidth="100.0" text="Edit" />
                         <Label fx:id="lblLetter" layoutX="450.0" layoutY="11.0" text="Letter" />
                         <Label fx:id="lblPrompt" layoutX="278.0" layoutY="7.0" text="Editing X:" />
-                        <Button fx:id="buttonNewCoefficient" layoutX="15.0" layoutY="56.0" mnemonicParsing="false" onAction="#addNewCoefficient" prefHeight="25.0" prefWidth="100.0" text="New Coefficient" />
+                        <Button fx:id="buttonNewCoefficient" layoutX="15.0" layoutY="56.0" mnemonicParsing="false" onAction="#prepareToAddNewCoefficient" prefHeight="25.0" prefWidth="100.0" text="New Coefficient" />
                         <Button fx:id="buttonCancelVariable" layoutX="123.0" layoutY="56.0" mnemonicParsing="false" onAction="#cancelVarOrCoef" prefHeight="25.0" prefWidth="100.0" text="Cancel" />
                         <ComboBox fx:id="cbLetter" layoutX="450.0" layoutY="28.0" prefHeight="25.0" prefWidth="60.0" />
                      </children>
@@ -87,7 +87,12 @@
           </Tab>
             <Tab fx:id="tabModel" text="Model">
               <content>
-                <AnchorPane fx:id="anchorPaneModel" minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+                <AnchorPane fx:id="anchorPaneModel" minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <Label layoutX="83.0" layoutY="14.0" text="Basic math elements:" />
+                        <Label layoutX="83.0" layoutY="47.0" text="Variables:" />
+                        <Label layoutX="83.0" layoutY="80.0" text="Coefficients:" />
+                     </children></AnchorPane>
               </content>
             </Tab>
         </tabs>
@@ -97,7 +102,7 @@
             <AnchorPane fx:id="innerAnchorPane" prefHeight="500.0" prefWidth="800.0">
                <children>
                   <Canvas fx:id="canvas" height="645.0" width="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                  <Label layoutX="14.0" layoutY="14.0" text="Main Function" />
+                  <Label fx:id="lblMainFunction" layoutX="14.0" layoutY="14.0" text="Main Function" />
                   <Label fx:id="lblConstraints" layoutX="14.0" layoutY="121.0" text="Constraints" />
                   <RadioButton fx:id="rdBtnMax" layoutX="14.0" layoutY="52.0" mnemonicParsing="false" text="Max" />
                   <RadioButton fx:id="rdBtnMin" layoutX="15.0" layoutY="80.0" mnemonicParsing="false" text="Min" />

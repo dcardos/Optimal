@@ -6,18 +6,19 @@ import java.util.Vector;
  * Created by Danilo on 09/09/2016.
  */
 public class Coefficient extends Element implements Expression {
-    private String mLetter;
+    private char mLetter;
     private Vector<String> mIndexes;
 
-    public Coefficient() {
+    public Coefficient(char letter) {
         this.mIndexes = new Vector<>();
+        this.mLetter = letter;
     }
 
-    public String getLetter() {
+    public char getLetter() {
         return mLetter;
     }
 
-    public void setLetter(String letter) {
+    public void setLetter(char letter) {
         mLetter = letter;
     }
 

@@ -16,9 +16,8 @@ public class Summation implements Expression {
         mStartingPoint = startingPoint;
     }
 
-    public void setStartingPointFromPrimitives(String letter, int starter) {
-        Coefficient coefficient = new Coefficient();
-        coefficient.setLetter(letter);
+    public void setStartingPointFromPrimitives(char letter, int starter) {
+        Coefficient coefficient = new Coefficient(letter);
         Constant constant = new Constant();
         constant.setFloat(starter);
         Equal equal = new Equal();

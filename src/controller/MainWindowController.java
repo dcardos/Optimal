@@ -14,13 +14,11 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
-import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.text.TextAlignment;
-import javafx.util.Pair;
 import model.Formula;
 import model.MathElement;
 import model.Variable;
@@ -63,6 +61,7 @@ public class MainWindowController {
             "X", "Y", "Z");
 
 
+    @FXML private Label lblMainFunction;
     @FXML private Label lblPrompt;
     @FXML private Label lblLetter;
     @FXML private Label lblDomain;
@@ -270,23 +269,8 @@ public class MainWindowController {
         rdBtnMax.setToggleGroup(mMaxMin);
         rdBtnMin.setToggleGroup(mMaxMin);
 
-        // Initializing Model Tab with ME
-        Vector<Pair> imageEs = makeModelGridElements();
-
-        for (Pair<ImageView, Expression> pair : imageEs) {
-            ImageView imageView = pair.getKey();
-            imageView.setOnDragDetected(event -> {
-            /* drag was detected, start a drag-and-drop gesture*/
-            /* allow any transfer mode */
-                Dragboard db = imageView.startDragAndDrop(TransferMode.ANY);
-            /* Put a String on a drag board */
-                beingDragged = new MathElement(pair.getValue());
-                ClipboardContent content = new ClipboardContent();
-                content.putString("Is valid");
-                db.setContent(content);
-                event.consume();
-            });
-        }
+        // Initializing Model Tab with math elements
+        makeModelBasicElements();
 
         // canvas context pop menu
         final ContextMenu canvasContextMenu = new ContextMenu();
@@ -469,8 +453,11 @@ public class MainWindowController {
                 } else if (beingDragged.getExpression() instanceof CloseParenthesis) {
                     CloseParenthesis closeParenthesis = new CloseParenthesis();
                     mathElement = new MathElement(beingDragged, closeParenthesis);
+                } else if (beingDragged.getExpression() instanceof Coefficient) {
+                    Coefficient coefficient = new Coefficient(((Coefficient) beingDragged.getExpression()).getLetter());
+                    mathElement = new MathElement(beingDragged, coefficient);
                 }
-                if (addME) {
+                if (addME && mathElement != null) {
                     try {
                         lastModifiedFormula.addMathElement(mathElement, mathElement.getXStart());
                     } catch (NullPointerException e) {
@@ -518,7 +505,7 @@ public class MainWindowController {
         }
     }
 
-    public void addNewVariable() {
+    public void prepareToAddNewVariable() {
         resetVarCoefFields();
         newVariableFlag = true;
         lblPrompt.setText("New variable parameters");
@@ -530,7 +517,7 @@ public class MainWindowController {
         disableVariableFields(false, false);
     }
 
-    public void addNewCoefficient() {
+    public void prepareToAddNewCoefficient() {
         resetVarCoefFields();
         newCoefficientFlag = true;
         lblPrompt.setText("New Coefficient parameters");
@@ -543,7 +530,7 @@ public class MainWindowController {
         disableVariableFields(false, true);
     }
 
-    public void editVarOrCoef() {
+    public void addEditVarOrCoef() {
         if (newVariableFlag) {  // confirm button after new variable clicked
             if (checkBoundTextFields()) {
                 Variable var = new Variable(cbLetter.getValue().toString().trim().charAt(0),
@@ -563,6 +550,7 @@ public class MainWindowController {
                 // GUI reaction
                 mVariables.add(var);
                 Collections.sort(mVariables);
+                addMathElementToModel(var.getMathElement(), 200.0, 50.0);
                 observableVariableList.add(var.getLetter() + " \u2208 " + var.getDomain() + ", " + var.getDimension() + " dimension");
                 FXCollections.sort(observableVariableList);
                 accordionBase.setExpandedPane(tpVariables);
@@ -780,6 +768,8 @@ public class MainWindowController {
         accordionBase.setDisable(!arg);
         tabData.setDisable(!arg);
         tabModel.setDisable(!arg);
+        scrollPane.setDisable(!arg);
+//        buttonNewConstraint.setDisable(!arg);
     }
 
     public void closeWindow() {
@@ -805,6 +795,11 @@ public class MainWindowController {
             tabPane.getSelectionModel().select(tabModel);
             tabVar.setDisable(true);
             tabData.setDisable(true);
+            accordionBase.setDisable(true);
+            lblMainFunction.setDisable(true);
+            rdBtnMin.setDisable(true);
+            rdBtnMax.setDisable(true);
+            lblConstraints.setDisable(true);
             formulaArg.setActiveEditing(true);
             formulaArg.getVBox().getChildren().removeAll(buttonDesignFormula, buttonLateX, buttonDelete);
             formulaArg.getVBox().getChildren().add(buttonStopEditing);
@@ -831,6 +826,11 @@ public class MainWindowController {
             }
             tabVar.setDisable(false);
             tabData.setDisable(false);
+            accordionBase.setDisable(false);
+            lblMainFunction.setDisable(false);
+            rdBtnMin.setDisable(false);
+            rdBtnMax.setDisable(false);
+            lblConstraints.setDisable(false);
             formulaArg.setActiveEditing(false);
             formulaArg.getVBox().getChildren().remove(buttonStopEditing);
             if (!formulaArg.getMathElements().isEmpty()) {
@@ -974,9 +974,7 @@ public class MainWindowController {
         canvas.getGraphicsContext2D().clearRect(0, 0, width, height);
     }
 
-    private Vector<Pair> makeModelGridElements() {
-        Pair<ImageView, Expression> pair;
-        Vector<Pair> imageEs = new Vector<>();
+    private void makeModelBasicElements() {
         Vector<MathElement> mathElements = new Vector<>();
 
         Summation somatorio = new Summation();
@@ -1009,9 +1007,10 @@ public class MainWindowController {
         mathElementA = new MathElement(closeParenthesis);
         mathElements.add(mathElementA);
 
-        double vAlignment = 50.0;
-        double position = 400.0;
+        double vAlignment = 20.0;
+        double hPosition = 200.0;
         for (MathElement mathElement : mathElements) {
+            // TODO: should be inside mathElement?
             BufferedImage image = prepareToDrawME(mathElement);
             // writing image buffer to image
             WritableImage wr = null;
@@ -1024,17 +1023,30 @@ public class MainWindowController {
                     }
                 }
             }
-            // creating a imageView element
-            ImageView imageView = new ImageView();
-            imageView.setImage(wr);
-            anchorPaneModel.getChildren().add(imageView);
-            AnchorPane.setLeftAnchor(imageView, position);
-            AnchorPane.setTopAnchor(imageView,vAlignment-(mathElement.getHeight()/2));
-            position += mathElement.getWidth() + 1;
-            pair = new Pair<>(imageView, mathElement.getExpression());
-            imageEs.add(pair);
+            // setting a imageView element
+            mathElement.getImageView().setImage(wr);
+            addMathElementToModel(mathElement, hPosition, vAlignment);
+            hPosition += mathElement.getWidth() + 1;
         }
-        return imageEs;
+    }
+
+    private void addMathElementToModel(MathElement mathElement, double posX, double posY) {
+        anchorPaneModel.getChildren().add(mathElement.getImageView());
+        AnchorPane.setLeftAnchor(mathElement.getImageView(), posX);
+        AnchorPane.setTopAnchor(mathElement.getImageView(),posY-(mathElement.getHeight()/2));
+
+        // programing drag and drop settings
+        mathElement.getImageView().setOnDragDetected(event -> {
+                /* drag was detected, start a drag-and-drop gesture*/
+                /* allow any transfer mode */
+            Dragboard db = mathElement.getImageView().startDragAndDrop(TransferMode.ANY);
+                /* Put a String on a drag board */
+            beingDragged = new MathElement(mathElement.getExpression());
+            ClipboardContent content = new ClipboardContent();
+            content.putString("Is valid");
+            db.setContent(content);
+            event.consume();
+        });
     }
 
     @Contract("null -> fail")
@@ -1050,60 +1062,6 @@ public class MainWindowController {
         jl.setForeground(mathElement.getColor());
         mathElement.getIcon().paintIcon(jl, gg, 0, 0);
         return image;
-    }
-
-    public Formula testFormula() {
-        // create a formula
-        Constant dois = new Constant();
-        Constant um = new Constant();
-        Coefficient menosN = new Coefficient();
-        Coefficient azao = new Coefficient();
-
-        dois.setFloat(2);
-        um.setFloat(1);
-        menosN.setLetter("-n");
-        Power power = new Power();
-        power.setLeftExpression(dois);
-        power.setRightExpression(menosN);
-
-        azao.setLetter("A");
-        azao.addIndex("n");
-        azao.addIndex("j");
-        azao.addIndex("2");
-        Sum soma = new Sum();
-        soma.setLeftExpression(power);
-        soma.setRightExpression(azao);
-
-        Equal nIgual1 = new Equal();
-        Coefficient ene = new Coefficient();
-        Infinity infinito = new Infinity();
-        ene.setLetter("n");
-        nIgual1.setLeftExpression(ene);
-        nIgual1.setRightExpression(um);
-        Summation somatorio = new Summation();
-        somatorio.setStartingPoint(nIgual1);
-        somatorio.setStoppingPoint(infinito);
-//        somatorio.setExpression(soma);
-
-        Equal expIgual1 = new Equal();
-        expIgual1.setLeftExpression(somatorio);
-        expIgual1.setRightExpression(um);
-
-        // formula division
-        Formula formula = new Formula(100, 30, true);
-        MathElement mathElementS = new MathElement(somatorio);
-        formula.addMathElementAtTheEnd(mathElementS);
-        MathElement mathElementP = new MathElement(power);
-        formula.addMathElementAtTheEnd(mathElementP);
-        formula.addMathElementAtTheEnd(new MathElement(new Sum()));
-        formula.addMathElementAtTheEnd(new MathElement(azao));
-
-//        formula.removeMathElement(mathElementP);
-//        formula.addMathElement(new MathElement(azao), 0);
-
-//        System.out.println(formula);
-
-        return formula;
     }
 
     private Formula getFormula(int yPosition) {

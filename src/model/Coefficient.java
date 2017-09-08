@@ -6,10 +6,12 @@ public class Coefficient implements Comparable<Coefficient>{
     private char letter;
     private int dimension;
     private double[] data;
+    private MathElement mMathElement;
 
     public Coefficient(char letter, int dimension) {
         this.letter = letter;
         this.dimension = dimension;
+        this.mMathElement = new MathElement(new model.math.Coefficient(letter));
     }
 
     public char getLetter() {
@@ -18,6 +20,7 @@ public class Coefficient implements Comparable<Coefficient>{
 
     public void setLetter(char letter) {
         this.letter = letter;
+        mMathElement = new MathElement(new model.math.Coefficient(letter));
     }
 
     public int getDimension() {
@@ -34,6 +37,10 @@ public class Coefficient implements Comparable<Coefficient>{
 
     public void setData(double[] data) {
         this.data = data;
+    }
+
+    public MathElement getMathElement() {
+        return mMathElement;
     }
 
     @Override

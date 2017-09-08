@@ -9,11 +9,10 @@ import static org.junit.Assert.*;
  */
 public class CoefficientTest {
 
-    private Coefficient bigA = new Coefficient();
+    private Coefficient bigA = new Coefficient('A');
 
     @Before
     public void setUp() throws Exception {
-        bigA.setLetter("A");
         bigA.addIndex("n");
         bigA.addIndex("j");
         bigA.addIndex("2");
@@ -26,8 +25,8 @@ public class CoefficientTest {
 
     @Test
     public void setLetter() throws Exception {
-        bigA.setLetter("B");
-        assertEquals(bigA.getLetter(), "B");
+        bigA.setLetter('B');
+        assertEquals(bigA.getLetter(), 'B');
     }
 
     @Test

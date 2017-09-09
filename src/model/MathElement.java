@@ -1,12 +1,16 @@
 package model;
 
 import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
 import model.math.Expression;
 import org.scilab.forge.jlatexmath.TeXConstants;
 import org.scilab.forge.jlatexmath.TeXFormula;
 import org.scilab.forge.jlatexmath.TeXIcon;
 
+import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 
 /**
  * Created by Danilo on 21/09/2016.
@@ -149,7 +153,34 @@ public class MathElement implements Comparable<MathElement>{
     }
 
     public ImageView getImageView() {
+        BufferedImage image = prepareToDrawME();
+        // writing image buffer to image
+        WritableImage wr = null;
+        if (image != null) {
+            wr = new WritableImage(image.getWidth(), image.getHeight());
+            PixelWriter pw = wr.getPixelWriter();
+            for (int x = 0; x < image.getWidth(); x++) {
+                for (int y = 0; y < image.getHeight(); y++) {
+                    pw.setArgb(x, y, image.getRGB(x, y));
+                }
+            }
+        }
+        // setting a imageView element
+        mImageView.setImage(wr);
         return mImageView;
+    }
+
+    public BufferedImage prepareToDrawME() {
+        // now create an actual image of the rendered equation
+        BufferedImage image = new BufferedImage(this.getWidth(),
+                this.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        Graphics2D gg = image.createGraphics();
+        gg.setColor(Color.WHITE);
+        gg.fillRect(0, 0, this.getWidth(), this.getHeight());
+        JLabel jl = new JLabel();
+        jl.setForeground(this.getColor());
+        this.getIcon().paintIcon(jl, gg, 0, 0);
+        return image;
     }
 
     @Override

@@ -14,8 +14,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
-import javafx.scene.image.PixelWriter;
-import javafx.scene.image.WritableImage;
 import javafx.scene.input.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.text.TextAlignment;
@@ -23,15 +21,17 @@ import model.Formula;
 import model.MathElement;
 import model.Variable;
 import model.math.*;
-import org.jetbrains.annotations.Contract;
 import org.jfree.fx.FXGraphics2D;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.*;
 
 public class MainWindowController {
+    // constants
+    private static final double XVARCOEFPOS = 200.0;
+    private static final double YVARPOS = 50.0;
+    private static final double YCOEFPOS = 80.0;
 
     private Main mMain;
     private FXGraphics2D g2;
@@ -162,17 +162,18 @@ public class MainWindowController {
         varCoefContextMenu.getItems().add(removeVarCoef);
         removeVarCoef.setOnAction(event -> {
             if (indexVarOrCoef > -1) {  // reassuring index within bounds
-                // TODO: remove from model
                 if (editVariableFlag) {
                     observableVariableList.remove(indexVarOrCoef);
                     Variable removedVar = mVariables.remove(indexVarOrCoef);
                     unusedLetters.add(String.valueOf(removedVar.getLetter()));
                     FXCollections.sort(unusedLetters);
+                    refreshVarsInModel();
                 } else if (editCoefficientFlag) {
                     observableCoefficientList.remove(indexVarOrCoef);
                     model.Coefficient removedCoef = mCoefficients.remove(indexVarOrCoef);
                     unusedLetters.add(String.valueOf(removedCoef.getLetter()));
                     FXCollections.sort(unusedLetters);
+                    refreshCoefsInModel();
                 }
                 editCoefficientFlag = false;
                 editVariableFlag = false;
@@ -550,7 +551,7 @@ public class MainWindowController {
                 // GUI reaction
                 mVariables.add(var);
                 Collections.sort(mVariables);
-                addMathElementToModel(var.getMathElement(), 200.0, 50.0);
+                refreshVarsInModel();
                 observableVariableList.add(var.getLetter() + " \u2208 " + var.getDomain() + ", " + var.getDimension() + " dimension");
                 FXCollections.sort(observableVariableList);
                 accordionBase.setExpandedPane(tpVariables);
@@ -577,6 +578,7 @@ public class MainWindowController {
             // GUI reaction
             mCoefficients.add(coef);
             Collections.sort(mCoefficients);
+            refreshCoefsInModel();
             observableCoefficientList.add(coef.getLetter() + ", " + coef.getDimension() + " dimension");
             FXCollections.sort(observableCoefficientList);
             accordionBase.setExpandedPane(tpCoefficients);
@@ -638,6 +640,7 @@ public class MainWindowController {
                             var.getLetter() + " \u2208 " + var.getDomain() + ", " + var.getDimension() + " dimension");
                     Collections.sort(mVariables);
                     FXCollections.sort(observableVariableList);
+                    refreshVarsInModel();
                     disableVariableFields(true, false);
                     resetVarCoefFields();
                     buttonEditVariable.setText("Edit");
@@ -667,6 +670,7 @@ public class MainWindowController {
                         coef.getLetter() + ", " + coef.getDimension() + " dimension");
                 Collections.sort(mCoefficients);
                 FXCollections.sort(observableCoefficientList);
+                refreshCoefsInModel();
                 disableVariableFields(true, true);
                 resetVarCoefFields();
                 buttonEditVariable.setText("Edit");
@@ -962,7 +966,7 @@ public class MainWindowController {
     private void drawMathElement(MathElement mathElement, int alignment) {
         if (mathElement == null) return;
         mathElement.updateIcon(alignment);
-        BufferedImage image = prepareToDrawME(mathElement);
+        BufferedImage image = mathElement.prepareToDrawME();
 
         // at this point the image is created, you could also save it with ImageIO
         this.g2.drawImage(image, mathElement.getXStart(), mathElement.getYStart(), null);
@@ -1010,21 +1014,6 @@ public class MainWindowController {
         double vAlignment = 20.0;
         double hPosition = 200.0;
         for (MathElement mathElement : mathElements) {
-            // TODO: should be inside mathElement?
-            BufferedImage image = prepareToDrawME(mathElement);
-            // writing image buffer to image
-            WritableImage wr = null;
-            if (image != null) {
-                wr = new WritableImage(image.getWidth(), image.getHeight());
-                PixelWriter pw = wr.getPixelWriter();
-                for (int x = 0; x < image.getWidth(); x++) {
-                    for (int y = 0; y < image.getHeight(); y++) {
-                        pw.setArgb(x, y, image.getRGB(x, y));
-                    }
-                }
-            }
-            // setting a imageView element
-            mathElement.getImageView().setImage(wr);
             addMathElementToModel(mathElement, hPosition, vAlignment);
             hPosition += mathElement.getWidth() + 1;
         }
@@ -1049,19 +1038,26 @@ public class MainWindowController {
         });
     }
 
-    @Contract("null -> fail")
-    private BufferedImage prepareToDrawME(MathElement mathElement) {
-        // now create an actual image of the rendered equation
-        assert (null != mathElement);
-        BufferedImage image = new BufferedImage(mathElement.getWidth(),
-                mathElement.getHeight(), BufferedImage.TYPE_INT_ARGB);
-        Graphics2D gg = image.createGraphics();
-        gg.setColor(Color.WHITE);
-        gg.fillRect(0, 0, mathElement.getWidth(), mathElement.getHeight());
-        JLabel jl = new JLabel();
-        jl.setForeground(mathElement.getColor());
-        mathElement.getIcon().paintIcon(jl, gg, 0, 0);
-        return image;
+    private void refreshVarsInModel() {
+        for (Variable variable : mVariables)
+            anchorPaneModel.getChildren().remove(variable.getMathElement().getImageView());
+
+        double xPos = XVARCOEFPOS;
+        for (Variable variable : mVariables) {
+            addMathElementToModel(variable.getMathElement(), xPos, YVARPOS);
+            xPos += variable.getMathElement().getWidth() + 1;
+        }
+    }
+
+    private void refreshCoefsInModel() {
+        for (model.Coefficient coefficient : mCoefficients)
+            anchorPaneModel.getChildren().remove(coefficient.getMathElement().getImageView());
+
+        double xPos = XVARCOEFPOS;
+        for (model.Coefficient coefficient : mCoefficients) {
+            addMathElementToModel(coefficient.getMathElement(), xPos, YCOEFPOS);
+            xPos += coefficient.getMathElement().getWidth() + 1;
+        }
     }
 
     private Formula getFormula(int yPosition) {

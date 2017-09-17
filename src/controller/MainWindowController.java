@@ -16,6 +16,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.input.*;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.text.TextAlignment;
 import model.Formula;
 import model.MathElement;
@@ -80,6 +81,9 @@ public class MainWindowController {
     @FXML private Tab tabModel;
     @FXML private ScrollPane scrollPane;
     @FXML private Button buttonNewConstraint;
+    @FXML private HBox hbBasic;
+    @FXML private HBox hbVariables;
+    @FXML private HBox hbCoefficients;
     // variable tab
     @FXML private Button buttonNewVariable;
     @FXML private Button buttonCancelVariable;
@@ -119,6 +123,11 @@ public class MainWindowController {
         cbLetter.setItems(unusedLetters);
         resetVarCoefFields();
         lblPrompt.setText("");
+
+        // Initializing h-boxes
+        hbBasic.setAlignment(Pos.CENTER);
+        hbVariables.setAlignment(Pos.CENTER);
+        hbCoefficients.setAlignment(Pos.CENTER);
 
         // force the field to be numeric only
         textLowerBound.textProperty().addListener(new ChangeListener<String>() {
@@ -168,12 +177,14 @@ public class MainWindowController {
                     unusedLetters.add(String.valueOf(removedVar.getLetter()));
                     FXCollections.sort(unusedLetters);
                     refreshVarsInModel();
+                    removeVarOrCoefFromFormulas(removedVar.getLetter());
                 } else if (editCoefficientFlag) {
                     observableCoefficientList.remove(indexVarOrCoef);
                     model.Coefficient removedCoef = mCoefficients.remove(indexVarOrCoef);
                     unusedLetters.add(String.valueOf(removedCoef.getLetter()));
                     FXCollections.sort(unusedLetters);
                     refreshCoefsInModel();
+                    removeVarOrCoefFromFormulas(removedCoef.getLetter());
                 }
                 editCoefficientFlag = false;
                 editVariableFlag = false;
@@ -491,6 +502,46 @@ public class MainWindowController {
         checkNonNegative.setSelected(false);
     }
 
+    private void removeVarOrCoefFromFormulas(char letter) {
+        ArrayList<MathElement> mahElementsToBeRemoved = new ArrayList<>();
+        for (Formula formula : formulas) {
+            mahElementsToBeRemoved.clear();
+            for (MathElement mathElement : formula.getMathElements()) {
+                if (mathElement.getExpression() instanceof Coefficient) {
+                    if (((Coefficient)mathElement.getExpression()).getLetter() == letter) {
+                        mahElementsToBeRemoved.add(mathElement);
+                    }
+                }
+            }
+            for (MathElement mathElement : mahElementsToBeRemoved) {
+                formula.removeMathElement(mathElement);
+            }
+        }
+        drawFormulas();
+        // TODO: delete empty constraints
+    }
+
+    private void editLetterFromFormulas(char oldLetter, model.Coefficient newCoef) {
+        ArrayList<MathElement> mahElementsToBeRemoved = new ArrayList<>();
+        for (Formula formula : formulas) {
+            mahElementsToBeRemoved.clear();
+            for (MathElement mathElement : formula.getMathElements()) {
+                if (mathElement.getExpression() instanceof Coefficient) {
+                    if (((Coefficient) mathElement.getExpression()).getLetter() == oldLetter) {
+                        mahElementsToBeRemoved.add(mathElement);
+                    }
+                }
+            }
+            for (MathElement mathElement : mahElementsToBeRemoved) {
+                formula.removeMathElement(mathElement);
+                formula.setActiveEditing(true);
+                formula.addMathElement(newCoef.getMathElement(), mathElement.getXStart());
+                formula.setActiveEditing(false);
+            }
+        }
+        drawFormulas();
+    }
+
     public void addNewConstraint() {
         Formula newConstraint = new Formula(FormulasPositionSet.mConstraintStartXPosition,
                 FormulasPositionSet.mFirstConstraintStartYPosition +
@@ -641,6 +692,7 @@ public class MainWindowController {
                     Collections.sort(mVariables);
                     FXCollections.sort(observableVariableList);
                     refreshVarsInModel();
+                    editLetterFromFormulas(oldLetter.trim().charAt(0), var);
                     disableVariableFields(true, false);
                     resetVarCoefFields();
                     buttonEditVariable.setText("Edit");
@@ -1014,15 +1066,13 @@ public class MainWindowController {
         double vAlignment = 20.0;
         double hPosition = 200.0;
         for (MathElement mathElement : mathElements) {
-            addMathElementToModel(mathElement, hPosition, vAlignment);
+            addMathElementToModel(mathElement, hbBasic);
             hPosition += mathElement.getWidth() + 1;
         }
     }
 
-    private void addMathElementToModel(MathElement mathElement, double posX, double posY) {
-        anchorPaneModel.getChildren().add(mathElement.getImageView());
-        AnchorPane.setLeftAnchor(mathElement.getImageView(), posX);
-        AnchorPane.setTopAnchor(mathElement.getImageView(),posY-(mathElement.getHeight()/2));
+    private void addMathElementToModel(MathElement mathElement, HBox hBox) {
+        hBox.getChildren().add(mathElement.getImageView());
 
         // programing drag and drop settings
         mathElement.getImageView().setOnDragDetected(event -> {
@@ -1039,25 +1089,15 @@ public class MainWindowController {
     }
 
     private void refreshVarsInModel() {
+        hbVariables.getChildren().clear();
         for (Variable variable : mVariables)
-            anchorPaneModel.getChildren().remove(variable.getMathElement().getImageView());
-
-        double xPos = XVARCOEFPOS;
-        for (Variable variable : mVariables) {
-            addMathElementToModel(variable.getMathElement(), xPos, YVARPOS);
-            xPos += variable.getMathElement().getWidth() + 1;
-        }
+            addMathElementToModel(variable.getMathElement(), hbVariables);
     }
 
     private void refreshCoefsInModel() {
+        hbCoefficients.getChildren().clear();
         for (model.Coefficient coefficient : mCoefficients)
-            anchorPaneModel.getChildren().remove(coefficient.getMathElement().getImageView());
-
-        double xPos = XVARCOEFPOS;
-        for (model.Coefficient coefficient : mCoefficients) {
-            addMathElementToModel(coefficient.getMathElement(), xPos, YCOEFPOS);
-            xPos += coefficient.getMathElement().getWidth() + 1;
-        }
+            addMathElementToModel(coefficient.getMathElement(), hbCoefficients);
     }
 
     private Formula getFormula(int yPosition) {

@@ -17,6 +17,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="850.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.MainWindowController">
    <children>
@@ -92,6 +93,9 @@
                         <Label layoutX="83.0" layoutY="14.0" text="Basic math elements:" />
                         <Label layoutX="83.0" layoutY="47.0" text="Variables:" />
                         <Label layoutX="83.0" layoutY="80.0" text="Coefficients:" />
+                        <HBox fx:id="hbBasic" layoutX="222.0" layoutY="5.0" prefHeight="35.0" prefWidth="750.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="1.0" />
+                        <HBox fx:id="hbVariables" layoutX="225.0" layoutY="39.0" prefHeight="35.0" prefWidth="750.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="37.0" />
+                        <HBox fx:id="hbCoefficients" prefHeight="35.0" prefWidth="750.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="73.0" />
                      </children></AnchorPane>
               </content>
             </Tab>

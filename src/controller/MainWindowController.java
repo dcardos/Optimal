@@ -408,7 +408,7 @@ public class MainWindowController {
 
         canvas.setOnDragExited(event -> {
             if (!event.isDropCompleted() && (null != lastModifiedFormula)) {
-                System.out.println("Dragged did not complete");
+//                System.out.println("Dragged did not complete");
                 lastModifiedFormula.removeMathElement(beingDragged);
                 drawFormulas();
                 beingDragged = null;
@@ -423,10 +423,10 @@ public class MainWindowController {
             Dragboard db = event.getDragboard();
             boolean success = false;
             if (db.hasString()) {
-                System.out.println("Dragged completed successfully!");
+//                System.out.println("Dragged completed successfully!");
                 success = true;
                 if (lastModifiedFormula == null || !lastModifiedFormula.isActiveEditing()) {
-                    System.out.println("lastModifiedFormula == null or not in Editing mode");
+//                    System.out.println("lastModifiedFormula == null or not in Editing mode");
                     return;
                 }
                 lastModifiedFormula.removeMathElement(beingDragged);
@@ -473,14 +473,14 @@ public class MainWindowController {
                     try {
                         lastModifiedFormula.addMathElement(mathElement, mathElement.getXStart());
                     } catch (NullPointerException e) {
-                        System.out.printf("Invalid MathElement or its X start position");
+//                        System.out.printf("Invalid MathElement or its X start position");
                         e.printStackTrace();
                     }
                 }
                 beingDragged = null;
                 drawFormulas();
             }
-            System.out.println(formulas);
+//            System.out.println(formulas);
             /* let the source know whether the string was successfully
              * transferred and used */
             event.setDropCompleted(success);
@@ -532,10 +532,11 @@ public class MainWindowController {
                     }
                 }
             }
-            for (MathElement mathElement : mahElementsToBeRemoved) {
-                formula.removeMathElement(mathElement);
+            for (MathElement oldMathElement : mahElementsToBeRemoved) {
+                formula.removeMathElement(oldMathElement);
                 formula.setActiveEditing(true);
-                formula.addMathElement(newCoef.getMathElement(), mathElement.getXStart());
+                MathElement newMathElement = new MathElement(newCoef.getMathElement().getExpression());
+                formula.addMathElement(newMathElement, oldMathElement.getXStart());
                 formula.setActiveEditing(false);
             }
         }
@@ -552,7 +553,7 @@ public class MainWindowController {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            System.out.println("InnerAnchorPane:" + innerAnchorPane.getHeight());
+//            System.out.println("InnerAnchorPane:" + innerAnchorPane.getHeight());
             scrollPane.setVvalue(1.0);  // scrolling to the end [0, 1]
         }
     }
@@ -723,6 +724,7 @@ public class MainWindowController {
                 Collections.sort(mCoefficients);
                 FXCollections.sort(observableCoefficientList);
                 refreshCoefsInModel();
+                editLetterFromFormulas(oldLetter.trim().charAt(0), coef);
                 disableVariableFields(true, true);
                 resetVarCoefFields();
                 buttonEditVariable.setText("Edit");
@@ -910,7 +912,7 @@ public class MainWindowController {
             Optional<String> result = dialogs.latexEntryDialog();
             result.ifPresent(name -> {
                 // TODO: parse latex entry and put into the formula
-                System.out.println("Latex Entry: " + name);
+//                System.out.println("Latex Entry: " + name);
             });
         });
 
@@ -935,8 +937,7 @@ public class MainWindowController {
 
         // Positioning formula buttons
         if( !formulas.add(formulaArg) ) {
-            System.out.println("Cannot add formula! Check y start value");
-            throw new Exception();
+            throw new Exception("Cannot add formula! Check y start value");
         }
         innerAnchorPane.getChildren().add(formulaArg.getVBox());
         AnchorPane.setRightAnchor(formulaArg.getVBox(), 30.0);
@@ -952,11 +953,11 @@ public class MainWindowController {
 
     private void removeConstraint(Formula formulaArg) {
         if (formulaArg.isMainFunction()) {
-            System.out.println("Impossible to remove Main Function");
+//            System.out.println("Impossible to remove Main Function");
             return;
         }
         if (!formulas.remove(formulaArg)) {
-            System.out.println("Impossible to remove this formula! Check y start.");
+//            System.out.println("Impossible to remove this formula! Check y start.");
             return;
         }
         for (Formula formula : formulas){
@@ -984,6 +985,9 @@ public class MainWindowController {
         int actualHeightSizeNeeded = roomAfter + formulas.last().getAlignment() +
                 FormulasPositionSet.getTotalConstraintVerticalSpace();
         canvas.setHeight(actualHeightSizeNeeded + roomAfter);
+        innerAnchorPane.setPrefHeight(canvas.getHeight());
+//        System.out.println("After resize - innerAnchorPane = " + innerAnchorPane.getHeight());
+//        System.out.println("Canvas height = " + canvas.getHeight());
     }
 
     private void drawFormulas() {

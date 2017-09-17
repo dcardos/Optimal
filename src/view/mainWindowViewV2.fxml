@@ -101,11 +101,11 @@
             </Tab>
         </tabs>
       </TabPane>
-      <ScrollPane fx:id="scrollPane" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="170.0">
+      <ScrollPane fx:id="scrollPane" fitToHeight="true" maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="650.0" prefWidth="800.0" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="170.0">
          <content>
-            <AnchorPane fx:id="innerAnchorPane" prefHeight="500.0" prefWidth="800.0">
+            <AnchorPane fx:id="innerAnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="650.0" prefWidth="800.0">
                <children>
-                  <Canvas fx:id="canvas" height="645.0" width="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                  <Canvas fx:id="canvas" height="650.0" width="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                   <Label fx:id="lblMainFunction" layoutX="14.0" layoutY="14.0" text="Main Function" />
                   <Label fx:id="lblConstraints" layoutX="14.0" layoutY="121.0" text="Constraints" />
                   <RadioButton fx:id="rdBtnMax" layoutX="14.0" layoutY="52.0" mnemonicParsing="false" text="Max" />
@@ -114,7 +114,7 @@
             </AnchorPane>
          </content>
       </ScrollPane>
-      <Accordion fx:id="accordionBase" layoutY="170.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="800.0">
+      <Accordion fx:id="accordionBase" layoutY="170.0" prefWidth="200.0">
         <panes>
           <TitledPane fx:id="tpVariables" animated="false" text="Variables">
             <content>
@@ -145,6 +145,6 @@
           </TitledPane>
         </panes>
       </Accordion>
-      <Button fx:id="buttonNewConstraint" layoutX="934.0" layoutY="170.0" mnemonicParsing="false" onAction="#addNewConstraint" prefHeight="29.0" prefWidth="152.0" text="Add new constraint" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="820.0" />
+      <Button fx:id="buttonNewConstraint" layoutX="842.0" layoutY="819.0" mnemonicParsing="false" onAction="#addNewConstraint" prefHeight="28.0" prefWidth="150.0" text="Add new constraint" AnchorPane.bottomAnchor="1.0" AnchorPane.rightAnchor="1.0" />
    </children>
 </AnchorPane>

@@ -12,6 +12,7 @@
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextField?>
@@ -19,7 +20,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="850.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.MainWindowController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.MainWindowController">
    <children>
       <MenuBar prefHeight="30.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <menus>
@@ -40,48 +41,72 @@
           </Menu>
         </menus>
       </MenuBar>
-      <TabPane fx:id="tabPane" layoutY="29.0" prefHeight="140.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="30.0">
+      <TabPane fx:id="tabPane" layoutY="29.0" prefHeight="100.0" prefWidth="1200.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="30.0">
         <tabs>
-          <Tab fx:id="tabVar" text="Variables and Coefficients">
+          <Tab fx:id="tabVar" text="Variables ">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <ComboBox fx:id="cbDomain" layoutX="278.0" layoutY="48.0" prefHeight="26.0" prefWidth="110.0" />
-                        <Label fx:id="lblDomain" layoutX="278.0" layoutY="28.0" text="Domain" />
-                        <CheckBox fx:id="checkNonNegative" layoutX="278.0" layoutY="81.0" mnemonicParsing="false" text="Non-negative" />
-                        <Label fx:id="lblDimension" layoutX="450.0" layoutY="60.0" text="Dimension" AnchorPane.topAnchor="60.0" />
-                        <ComboBox fx:id="cbDimension" layoutX="450.0" layoutY="77.0" prefHeight="26.0" prefWidth="60.0" />
-                        <Label fx:id="lblUpperBound" layoutX="573.0" layoutY="11.0" text="Upper bound" />
-                        <Label fx:id="lblLowerBound" layoutX="573.0" layoutY="60.0" text="Lower bound" AnchorPane.topAnchor="60.0" />
-                        <TextField fx:id="textUpperBound" layoutX="573.0" layoutY="28.0" prefHeight="26.0" prefWidth="85.0" />
-                        <TextField fx:id="textLowerBound" layoutX="573.0" layoutY="77.0" prefHeight="26.0" prefWidth="83.0" />
-                        <Button fx:id="buttonNewVariable" layoutX="15.0" layoutY="24.0" mnemonicParsing="false" onAction="#prepareToAddNewVariable" prefHeight="25.0" prefWidth="100.0" text="New Variable" />
-                        <Button fx:id="buttonEditVariable" layoutX="123.0" layoutY="24.0" mnemonicParsing="false" onAction="#addEditVarOrCoef" prefHeight="25.0" prefWidth="100.0" text="Edit" />
-                        <Label fx:id="lblLetter" layoutX="450.0" layoutY="11.0" text="Letter" />
-                        <Label fx:id="lblPrompt" layoutX="278.0" layoutY="7.0" text="Editing X:" />
-                        <Button fx:id="buttonNewCoefficient" layoutX="15.0" layoutY="56.0" mnemonicParsing="false" onAction="#prepareToAddNewCoefficient" prefHeight="25.0" prefWidth="100.0" text="New Coefficient" />
-                        <Button fx:id="buttonCancelVariable" layoutX="123.0" layoutY="56.0" mnemonicParsing="false" onAction="#cancelVarOrCoef" prefHeight="25.0" prefWidth="100.0" text="Cancel" />
-                        <ComboBox fx:id="cbLetter" layoutX="450.0" layoutY="28.0" prefHeight="25.0" prefWidth="60.0" />
+                        <ComboBox fx:id="cbDomainVar" layoutX="430.0" layoutY="30.0" prefHeight="26.0" prefWidth="110.0" />
+                        <Label fx:id="lblDomainVar" layoutX="430.0" layoutY="10.0" text="Domain" />
+                        <CheckBox fx:id="checkNonNegative" layoutX="280.0" layoutY="35.0" mnemonicParsing="false" text="Non-negative" />
+                        <Label fx:id="lblDimensionVar" layoutX="680.0" layoutY="10.0" text="Dimension" />
+                        <ComboBox fx:id="cbDimensionVar" layoutX="680.0" layoutY="30.0" prefHeight="26.0" prefWidth="60.0" />
+                        <Label fx:id="lblUpperBound" layoutX="780.0" layoutY="10.0" text="Upper bound" />
+                        <Label fx:id="lblLowerBound" layoutX="890.0" layoutY="10.0" text="Lower bound" />
+                        <TextField fx:id="textUpperBound" layoutX="780.0" layoutY="30.0" prefHeight="26.0" prefWidth="85.0" />
+                        <TextField fx:id="textLowerBound" layoutX="890.0" layoutY="30.0" prefHeight="26.0" prefWidth="83.0" />
+                        <Button fx:id="buttonNewVariable" layoutX="15.0" layoutY="8.0" mnemonicParsing="false" onAction="#prepareToAddNewVariable" prefHeight="25.0" prefWidth="100.0" text="New Variable" />
+                        <Button fx:id="buttonEditVariable" layoutX="122.0" layoutY="8.0" mnemonicParsing="false" onAction="#addEditVar" prefHeight="25.0" prefWidth="100.0" text="Edit" />
+                        <Label fx:id="lblLetterVar" layoutX="580.0" layoutY="10.0" text="Letter" />
+                        <Label fx:id="lblPromptVar" layoutX="280.0" layoutY="10.0" text="Editing X:" />
+                        <Button fx:id="buttonCancelVariable" layoutX="122.0" layoutY="38.0" mnemonicParsing="false" onAction="#cancelVar" prefHeight="25.0" prefWidth="100.0" text="Cancel" />
+                        <ComboBox fx:id="cbLetterVar" layoutX="580.0" layoutY="30.0" prefHeight="25.0" prefWidth="60.0" />
                      </children>
                   </AnchorPane>
             </content>
           </Tab>
-          <Tab fx:id="tabData" text="Data">
+            <Tab fx:id="tabCoefData" text="Coefficients and its Data">
+              <content>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <Button fx:id="buttonNewCoefficient" layoutX="15.0" layoutY="8.0" mnemonicParsing="false" onAction="#prepareToAddNewCoefficient" prefHeight="25.0" prefWidth="100.0" text="New Coefficient" />
+                        <Button fx:id="buttonEditCoef" layoutX="122.0" layoutY="8.0" mnemonicParsing="false" onAction="#addEditCoef" prefHeight="25.0" prefWidth="100.0" text="Edit" />
+                        <Button fx:id="buttonCancelCoef" layoutX="122.0" layoutY="38.0" mnemonicParsing="false" onAction="#cancelCoef" prefHeight="25.0" prefWidth="100.0" text="Cancel" />
+                        <Label fx:id="lblDimensionCoef" layoutX="480.0" layoutY="10.0" text="Dimension" />
+                        <ComboBox fx:id="cbDimensionCoef" layoutX="480.0" layoutY="30.0" prefHeight="26.0" prefWidth="60.0" />
+                        <Label fx:id="lblLetterCoef" layoutX="380.0" layoutY="10.0" text="Letter" />
+                        <Label fx:id="lblPromptCoef" layoutX="245.0" layoutY="25.0" text="Editing X:" />
+                        <ComboBox fx:id="cbLetterCoef" layoutX="380.0" layoutY="30.0" prefHeight="25.0" prefWidth="60.0" />
+                        <Separator layoutX="610.0" orientation="VERTICAL" prefHeight="75.0" />
+                        <ComboBox fx:id="cbData" layoutX="631.0" layoutY="30.0" prefWidth="150.0" />
+                        <Label fx:id="lblData" layoutX="631.0" layoutY="10.0" text="Data for this coefficient" />
+                        <Button fx:id="buttonNewData" layoutX="825.0" layoutY="8.0" mnemonicParsing="false" prefWidth="100.0" text="New data" />
+                        <Button fx:id="buttonEditData" layoutX="930.0" layoutY="8.0" mnemonicParsing="false" prefWidth="100.0" text="Edit data" />
+                        <Button fx:id="buttonRemoveData" layoutX="930.0" layoutY="38.0" mnemonicParsing="false" prefWidth="100.0" text="Remove data" />
+                     </children>
+                  </AnchorPane>
+              </content>
+            </Tab>
+          <Tab fx:id="tabIndexSet" text="Indexes and its Sets">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <Label layoutX="280.0" layoutY="46.0" text="Size" />
-                        <TextField layoutX="280.0" layoutY="63.0" prefHeight="26.0" prefWidth="40.0" />
-                        <Button layoutX="457.0" layoutY="19.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="99.0" text="Fill data" />
-                        <Button layoutX="458.0" layoutY="62.0" mnemonicParsing="false" text="Import Data" />
-                        <Button layoutX="14.0" layoutY="11.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="119.0" text="Add new Set" />
-                        <Button layoutX="38.0" layoutY="75.0" mnemonicParsing="false" text="Remove" />
-                        <Label layoutX="374.0" layoutY="46.0" text="Letter" />
-                        <TextField layoutX="374.0" layoutY="62.0" prefHeight="26.0" prefWidth="39.0" />
-                        <Label layoutX="188.0" layoutY="46.0" text="Dimension" />
-                        <ComboBox layoutX="187.0" layoutY="63.0" prefHeight="26.0" prefWidth="73.0" />
+                        <Button layoutX="912.0" layoutY="23.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="88.0" text="New set" />
+                        <Button layoutX="1066.0" layoutY="11.0" mnemonicParsing="false" text="Import Data" />
+                        <Button layoutX="14.0" layoutY="11.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="119.0" text="Add new index" />
                         <Button layoutX="14.0" layoutY="41.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="119.0" text="Add new Array" />
                         <Label layoutX="188.0" layoutY="16.0" text="Editing X:" />
+                        <Label fx:id="lblLetter1" layoutX="299.0" layoutY="15.0" text="Letter" />
+                        <ComboBox fx:id="cbLetterIndex" layoutX="300.0" layoutY="29.0" prefHeight="25.0" prefWidth="60.0" />
+                        <ComboBox fx:id="cbSet" layoutX="388.0" layoutY="23.0" prefHeight="26.0" prefWidth="110.0" />
+                        <Label fx:id="lblDomain1" layoutX="388.0" layoutY="8.0" text="Pre Defined Sets" />
+                        <Label fx:id="lblUpperBound1" layoutX="631.0" layoutY="8.0" text="End value" />
+                        <Label fx:id="lblLowerBound1" layoutX="527.0" layoutY="15.0" text="Start value" />
+                        <TextField fx:id="textMinVal" layoutX="530.0" layoutY="36.0" prefHeight="26.0" prefWidth="50.0" />
+                        <TextField fx:id="textMaxVal" layoutX="632.0" layoutY="29.0" prefHeight="26.0" prefWidth="50.0" />
+                        <Separator layoutX="373.0" layoutY="2.0" orientation="VERTICAL" prefHeight="71.0" AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                        <Separator layoutX="754.0" layoutY="1.0" orientation="VERTICAL" prefHeight="71.0" AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" />
                      </children>
                   </AnchorPane>
             </content>
@@ -90,22 +115,22 @@
               <content>
                 <AnchorPane fx:id="anchorPaneModel" minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <Label layoutX="83.0" layoutY="14.0" text="Basic math elements:" />
-                        <Label layoutX="83.0" layoutY="47.0" text="Variables:" />
-                        <Label layoutX="83.0" layoutY="80.0" text="Coefficients:" />
-                        <HBox fx:id="hbBasic" layoutX="222.0" layoutY="5.0" prefHeight="35.0" prefWidth="750.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="1.0" />
-                        <HBox fx:id="hbVariables" layoutX="225.0" layoutY="39.0" prefHeight="35.0" prefWidth="750.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="37.0" />
-                        <HBox fx:id="hbCoefficients" prefHeight="35.0" prefWidth="750.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="73.0" />
+                        <Label layoutX="846.0" layoutY="5.0" text="Basic math elements" />
+                        <Label layoutX="90.0" layoutY="10.0" text="Variables" />
+                        <Label layoutX="83.0" layoutY="40.0" text="Coefficients" />
+                        <HBox fx:id="hbBasic" layoutX="700.0" layoutY="25.0" prefHeight="40.0" prefWidth="400.0" />
+                        <HBox fx:id="hbVariables" layoutX="220.0" layoutY="4.0" prefHeight="30.0" prefWidth="470.0" />
+                        <HBox fx:id="hbCoefficients" layoutX="220.0" layoutY="36.0" prefHeight="30.0" prefWidth="470.0" />
                      </children></AnchorPane>
               </content>
             </Tab>
         </tabs>
       </TabPane>
-      <ScrollPane fx:id="scrollPane" fitToHeight="true" maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="650.0" prefWidth="800.0" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="170.0">
+      <ScrollPane fx:id="scrollPane" fitToHeight="true" maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="540.0" prefWidth="980.0" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="220.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="130.0">
          <content>
-            <AnchorPane fx:id="innerAnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="650.0" prefWidth="800.0">
+            <AnchorPane fx:id="innerAnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="540.0" prefWidth="980.0">
                <children>
-                  <Canvas fx:id="canvas" height="650.0" width="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                  <Canvas fx:id="canvas" height="540.0" width="980.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                   <Label fx:id="lblMainFunction" layoutX="14.0" layoutY="14.0" text="Main Function" />
                   <Label fx:id="lblConstraints" layoutX="14.0" layoutY="121.0" text="Constraints" />
                   <RadioButton fx:id="rdBtnMax" layoutX="14.0" layoutY="52.0" mnemonicParsing="false" text="Max" />
@@ -114,7 +139,7 @@
             </AnchorPane>
          </content>
       </ScrollPane>
-      <Accordion fx:id="accordionBase" layoutY="170.0" prefWidth="200.0">
+      <Accordion fx:id="accordionBase" layoutY="130.0" prefHeight="540.0" prefWidth="220.0">
         <panes>
           <TitledPane fx:id="tpVariables" animated="false" text="Variables">
             <content>
@@ -124,7 +149,7 @@
                      </children></AnchorPane>
             </content>
           </TitledPane>
-            <TitledPane fx:id="tpCoefficients" animated="false" layoutX="10.0" layoutY="10.0" text="Coefficients">
+            <TitledPane fx:id="tpCoefficients" animated="false" layoutX="10.0" layoutY="10.0" text="Coefficients and its datas">
                <content>
                   <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
@@ -133,12 +158,7 @@
                   </AnchorPane>
                </content>
             </TitledPane>
-          <TitledPane fx:id="tpSets" animated="false" text="Set (for indexes)">
-            <content>
-              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
-            </content>
-          </TitledPane>
-          <TitledPane fx:id="tpData" animated="false" text="Data (coefficient values)">
+          <TitledPane fx:id="tpSets" animated="false" text="Indexes and its sets">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
             </content>

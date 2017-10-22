@@ -139,7 +139,7 @@
             </AnchorPane>
          </content>
       </ScrollPane>
-      <Accordion fx:id="accordionBase" layoutY="130.0" prefHeight="540.0" prefWidth="220.0">
+      <Accordion fx:id="accordionBase" layoutY="130.0" prefHeight="350.0" prefWidth="220.0">
         <panes>
           <TitledPane fx:id="tpVariables" animated="false" text="Variables">
             <content>

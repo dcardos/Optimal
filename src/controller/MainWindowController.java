@@ -10,7 +10,6 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
@@ -25,6 +24,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import model.Data;
 import model.Formula;
 import model.MathElement;
 import model.Variable;
@@ -33,6 +33,7 @@ import org.jfree.fx.FXGraphics2D;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.*;
 
 public class MainWindowController {
@@ -49,6 +50,7 @@ public class MainWindowController {
     private MathElement beingDragged;
     private final ArrayList<Variable> mVariables = new ArrayList<>();
     private final ArrayList<model.Coefficient> mCoefficients = new ArrayList<>();
+    public final ArrayList<Data> mData = new ArrayList<>();
 
     private final ToggleGroup mMaxMin = new ToggleGroup();
 
@@ -326,18 +328,7 @@ public class MainWindowController {
         buttonNewData.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                try {
-                    FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/view/dataWindowView.fxml"));
-                    Parent root1 = (Parent) fxmlLoader.load();
-                    Stage stage = new Stage();
-                    stage.initModality(Modality.APPLICATION_MODAL);
-//                    stage.initStyle(StageStyle.UNDECORATED);
-                    stage.setTitle("New data");
-                    stage.setScene(new Scene(root1));
-                    stage.show();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                openDataWindow();
             }
         });
 
@@ -1170,5 +1161,32 @@ public class MainWindowController {
                 return formula;
         }
         return null;
+    }
+
+    private void openDataWindow() {
+        FXMLLoader loader = new FXMLLoader(Main.class.getResource("/view/dataWindowView.fxml"));
+        AnchorPane pane;
+        try {
+            pane = loader.load();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        DataWindowController dataWindowController = loader.getController();
+        try {
+            dataWindowController.setMain(this);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+
+        Scene scene = new Scene(pane);      // takes a pane as an argument
+        //scene.getStylesheets().add(getClass().getResource("../view/styles.css").toExternalForm());
+        Stage dataStage = new Stage();
+        dataStage.initModality(Modality.APPLICATION_MODAL); // cannot interact with this window
+        dataStage.setTitle("New data");
+        dataStage.setScene(scene);       // set scene to the stage
+        dataStage.setResizable(false);
+        dataStage.show();
     }
 }

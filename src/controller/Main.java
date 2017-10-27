@@ -11,6 +11,7 @@ import java.io.IOException;
 public class Main extends Application {
 
     private Stage mPrimaryStage;
+    public int test = 122;
 
     public Stage getPrimaryStage() {
         return mPrimaryStage;

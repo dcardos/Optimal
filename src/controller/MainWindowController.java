@@ -24,7 +24,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import model.Data;
 import model.Formula;
 import model.MathElement;
 import model.Variable;
@@ -50,7 +49,6 @@ public class MainWindowController {
     private MathElement beingDragged;
     private final ArrayList<Variable> mVariables = new ArrayList<>();
     private final ArrayList<model.Coefficient> mCoefficients = new ArrayList<>();
-    public final ArrayList<Data> mData = new ArrayList<>();
 
     private final ToggleGroup mMaxMin = new ToggleGroup();
 

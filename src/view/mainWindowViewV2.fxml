@@ -87,21 +87,20 @@
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <Button layoutX="912.0" layoutY="23.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="88.0" text="New set" />
-                        <Button layoutX="1066.0" layoutY="11.0" mnemonicParsing="false" text="Import Data" />
-                        <Button layoutX="14.0" layoutY="11.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="119.0" text="Add new index" />
-                        <Button layoutX="14.0" layoutY="41.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="119.0" text="Add new Array" />
-                        <Label layoutX="188.0" layoutY="16.0" text="Editing X:" />
-                        <Label fx:id="lblLetter1" layoutX="299.0" layoutY="15.0" text="Letter" />
-                        <ComboBox fx:id="cbLetterIndex" layoutX="300.0" layoutY="29.0" prefHeight="25.0" prefWidth="60.0" />
-                        <ComboBox fx:id="cbSet" layoutX="388.0" layoutY="23.0" prefHeight="26.0" prefWidth="110.0" />
-                        <Label fx:id="lblDomain1" layoutX="388.0" layoutY="8.0" text="Pre Defined Sets" />
-                        <Label fx:id="lblUpperBound1" layoutX="631.0" layoutY="8.0" text="End value" />
-                        <Label fx:id="lblLowerBound1" layoutX="527.0" layoutY="15.0" text="Start value" />
-                        <TextField fx:id="textMinVal" layoutX="530.0" layoutY="36.0" prefHeight="26.0" prefWidth="50.0" />
-                        <TextField fx:id="textMaxVal" layoutX="632.0" layoutY="29.0" prefHeight="26.0" prefWidth="50.0" />
-                        <Separator layoutX="373.0" layoutY="2.0" orientation="VERTICAL" prefHeight="71.0" AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" />
-                        <Separator layoutX="754.0" layoutY="1.0" orientation="VERTICAL" prefHeight="71.0" AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                        <Button fx:id="buttonNewSet" layoutX="910.0" layoutY="20.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="88.0" text="New set" />
+                        <Button fx:id="buttonNewIndex" layoutX="15.0" layoutY="8.0" mnemonicParsing="false" onAction="#newIndexClicked" prefHeight="25.0" prefWidth="120.0" text="Add new index" />
+                        <Label fx:id="lblPromptIndex" layoutX="245.0" layoutY="25.0" text="Editing X:" />
+                        <Label fx:id="lblLetterIndex" layoutX="380.0" layoutY="10.0" text="Letter" />
+                        <ComboBox fx:id="cbLetterIndex" layoutX="380.0" layoutY="30.0" prefHeight="25.0" prefWidth="60.0" />
+                        <ComboBox fx:id="cbSet" layoutX="480.0" layoutY="30.0" prefHeight="25.0" prefWidth="110.0" />
+                        <Label fx:id="lblPreDefSets" layoutX="480.0" layoutY="10.0" text="Pre Defined Sets" />
+                        <Label fx:id="lblEndValue" layoutX="690.0" layoutY="10.0" text="End value" />
+                        <Label fx:id="lblStartValue" layoutX="610.0" layoutY="10.0" text="Start value" />
+                        <TextField fx:id="textStartValue" layoutX="610.0" layoutY="30.0" prefHeight="25.0" prefWidth="60.0" />
+                        <TextField fx:id="textEndValue" layoutX="690.0" layoutY="30.0" prefHeight="25.0" prefWidth="60.0" />
+                        <Separator layoutX="861.0" orientation="VERTICAL" prefHeight="71.0" AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                        <Button fx:id="buttonEditIndex" layoutX="142.0" layoutY="8.0" mnemonicParsing="false" onAction="#addEditIndex" prefHeight="25.0" prefWidth="80.0" text="Edit" />
+                        <Button fx:id="buttonCancelIndex" layoutX="142.0" layoutY="38.0" mnemonicParsing="false" onAction="#cancelIndexClicked" prefHeight="25.0" prefWidth="80.0" text="Cancel" />
                      </children>
                   </AnchorPane>
             </content>
@@ -153,9 +152,12 @@
                   </AnchorPane>
                </content>
             </TitledPane>
-          <TitledPane fx:id="tpSets" animated="false" text="Indexes and its sets">
+          <TitledPane fx:id="tpIndexes" animated="false" text="Indexes and its sets">
             <content>
-              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <ListView fx:id="lvIndexes" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                     </children></AnchorPane>
             </content>
           </TitledPane>
         </panes>

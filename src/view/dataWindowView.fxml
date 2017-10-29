@@ -9,9 +9,9 @@
 
 <AnchorPane prefHeight="800.0" prefWidth="450.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.DataWindowController">
    <children>
-      <TableView fx:id="tableData" layoutX="11.0" layoutY="98.0" prefHeight="693.0" prefWidth="876.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="100.0">
+      <TableView fx:id="tableData" layoutX="11.0" layoutY="98.0" prefHeight="693.0" prefWidth="876.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="190.0">
         <columns>
-          <TableColumn fx:id="tableColumnIndex" prefWidth="215.0" text="Index (row, column)" />
+          <TableColumn fx:id="tableColumnIndex" editable="false" prefWidth="215.0" text="Index (row) (column)" />
           <TableColumn fx:id="tableColumnValue" minWidth="0.0" prefWidth="215.0" text="Value" />
         </columns>
       </TableView>
@@ -22,8 +22,12 @@
       <TextField fx:id="textRowsNumber" layoutX="100.0" layoutY="50.0" prefHeight="31.0" prefWidth="50.0" />
       <TextField fx:id="textColumnsNumber" layoutX="160.0" layoutY="50.0" prefHeight="31.0" prefWidth="50.0" />
       <Button fx:id="buttonImportFile" layoutX="260.0" layoutY="60.0" mnemonicParsing="false" text="Import from file" />
-      <Button fx:id="buttonFillValues" layoutX="260.0" layoutY="20.0" mnemonicParsing="false" prefWidth="100.0" text="Fill Values" />
-      <Button fx:id="buttonCancel" layoutX="380.0" layoutY="20.0" mnemonicParsing="false" prefWidth="60.0" text="Cancel" />
-      <Button fx:id="buttonDone" layoutX="380.0" layoutY="60.0" mnemonicParsing="false" prefWidth="60.0" text="Done" />
+      <Button fx:id="buttonFillValues" layoutX="260.0" layoutY="20.0" mnemonicParsing="false" onAction="#fillDataCliked" prefWidth="100.0" text="Fill Values" />
+      <Button fx:id="buttonCancel" layoutX="380.0" layoutY="20.0" mnemonicParsing="false" onAction="#cancelClicked" prefWidth="60.0" text="Cancel" />
+      <Button fx:id="buttonDone" layoutX="380.0" layoutY="60.0" mnemonicParsing="false" onAction="#done" prefWidth="60.0" text="Done" />
+      <Label layoutX="80.0" layoutY="110.0" text="You can edit the values by clicking twice" />
+      <Label layoutX="30.0" layoutY="110.0" text="Hint:" />
+      <Label layoutX="80.0" layoutY="130.0" text="To edit the adjacent value just pres tab twice" />
+      <Label layoutX="80.0" layoutY="150.0" text="You don't need to edit all the values" />
    </children>
 </AnchorPane>

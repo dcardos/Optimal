@@ -66,24 +66,19 @@
                   </AnchorPane>
             </content>
           </Tab>
-            <Tab fx:id="tabCoefData" text="Coefficients and its Data">
+            <Tab fx:id="tabCoefData" text="Coefficients">
               <content>
                 <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
                         <Button fx:id="buttonNewCoefficient" layoutX="15.0" layoutY="8.0" mnemonicParsing="false" onAction="#prepareToAddNewCoefficient" prefHeight="25.0" prefWidth="100.0" text="New Coefficient" />
                         <Button fx:id="buttonEditCoef" layoutX="122.0" layoutY="8.0" mnemonicParsing="false" onAction="#addEditCoef" prefHeight="25.0" prefWidth="100.0" text="Edit" />
                         <Button fx:id="buttonCancelCoef" layoutX="122.0" layoutY="38.0" mnemonicParsing="false" onAction="#cancelCoef" prefHeight="25.0" prefWidth="100.0" text="Cancel" />
-                        <Label fx:id="lblDimensionCoef" layoutX="480.0" layoutY="10.0" text="Dimension" />
-                        <ComboBox fx:id="cbDimensionCoef" layoutX="480.0" layoutY="30.0" prefHeight="26.0" prefWidth="60.0" />
                         <Label fx:id="lblLetterCoef" layoutX="380.0" layoutY="10.0" text="Letter" />
                         <Label fx:id="lblPromptCoef" layoutX="245.0" layoutY="25.0" text="Editing X:" />
                         <ComboBox fx:id="cbLetterCoef" layoutX="380.0" layoutY="30.0" prefHeight="25.0" prefWidth="60.0" />
-                        <Separator layoutX="610.0" orientation="VERTICAL" prefHeight="75.0" />
-                        <ComboBox fx:id="cbData" layoutX="631.0" layoutY="30.0" prefWidth="150.0" />
-                        <Label fx:id="lblData" layoutX="631.0" layoutY="10.0" text="Data for this coefficient" />
-                        <Button fx:id="buttonNewData" layoutX="825.0" layoutY="8.0" mnemonicParsing="false" prefWidth="100.0" text="New data" />
-                        <Button fx:id="buttonEditData" layoutX="930.0" layoutY="8.0" mnemonicParsing="false" prefWidth="100.0" text="Edit data" />
-                        <Button fx:id="buttonRemoveData" layoutX="930.0" layoutY="38.0" mnemonicParsing="false" prefWidth="100.0" text="Remove data" />
+                        <Label fx:id="lblData" layoutX="542.0" layoutY="10.0" text="Values for this coefficient" />
+                        <Button fx:id="buttonNewData" layoutX="500.0" layoutY="30.0" mnemonicParsing="false" onAction="#openDataWindow" prefWidth="100.0" text="New data" />
+                        <Button fx:id="buttonEditData" layoutX="620.0" layoutY="30.0" mnemonicParsing="false" prefWidth="100.0" text="Edit data" />
                      </children>
                   </AnchorPane>
               </content>
@@ -149,7 +144,7 @@
                      </children></AnchorPane>
             </content>
           </TitledPane>
-            <TitledPane fx:id="tpCoefficients" animated="false" layoutX="10.0" layoutY="10.0" text="Coefficients and its datas">
+            <TitledPane fx:id="tpCoefficients" animated="false" layoutX="10.0" layoutY="10.0" text="Coefficients">
                <content>
                   <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>

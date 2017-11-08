@@ -5,14 +5,24 @@ import org.jetbrains.annotations.NotNull;
 public class SumIndex implements Comparable<SumIndex>{
     private char mLetter;
     private char mSet;
-    private Double mStartValue;
-    private Double mEndValue;
+    private boolean personalized;
+    private int[] values;
 
-    public SumIndex(char letter, char set, Double startValue, Double endValue) {
+    public SumIndex(char letter, char set, int startValue, int endValue) {
         mLetter = letter;
         mSet = set;
-        mStartValue = startValue;
-        mEndValue = endValue;
+        values = new int[endValue-startValue+1];
+        personalized = false;
+        int k = 0;
+        for (int i = startValue; i <= endValue; i++)
+            values[k++] = i;
+    }
+
+    public SumIndex(char letter, char set) {
+        mLetter = letter;
+        mSet = set;
+        personalized = true;
+        // TODO: read values from file
     }
 
     public char getLetter() {
@@ -31,20 +41,46 @@ public class SumIndex implements Comparable<SumIndex>{
         mSet = set;
     }
 
-    public Double getStartValue() {
-        return mStartValue;
+    public int[] getValues() {
+        return values;
     }
 
-    public void setStartValue(Double startValue) {
-        mStartValue = startValue;
+    public void setValues(int[] values) {
+        this.values = values;
     }
 
-    public Double getEndValue() {
-        return mEndValue;
+    public boolean isPersonalized() {
+        return personalized;
     }
 
-    public void setEndValue(Double endValue) {
-        mEndValue = endValue;
+    public void setPersonalized(boolean personalized) {
+        this.personalized = personalized;
+    }
+
+    public int getSize() {
+        return values.length;
+    }
+
+    public int getStartValue() {
+        if (!personalized)
+            return values[0];
+        else
+            return -1;
+    }
+
+    public int getEndValue() {
+        if (!personalized)
+            return values[getSize()-1];
+        else
+            return -1;
+    }
+
+    public void setStartAndEndValue(int start, int end) {
+        values = new int[end-start+1];
+        int k = 0;
+        for (int i = start; i <= end; i++)
+            values[k++] = i;
+        personalized = false;
     }
 
     @Override

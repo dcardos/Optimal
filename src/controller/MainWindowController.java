@@ -65,12 +65,15 @@ public class MainWindowController {
     private final ObservableList<String> observableDimensionList = FXCollections.observableArrayList(
             "1", "2", "3", "4", "5");
     private final ObservableList<String> unusedLetters = FXCollections.observableArrayList(
-            "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
-                    "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W",
-            "X", "Y", "Z");
+            "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o",
+            "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z");
     private final ObservableList<String> unusedIndexLetters = FXCollections.observableArrayList(
             "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o",
             "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z");
+    private final ObservableList<String> unusedSetLetters = FXCollections.observableArrayList(
+            "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
+            "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W",
+            "X", "Y", "Z");
 
     public model.Coefficient mCoefficientBeingUsed = new model.Coefficient('A', 1);
 
@@ -128,7 +131,8 @@ public class MainWindowController {
     @FXML private Button buttonNewIndex;
     @FXML private Button buttonEditIndex;
     @FXML private Button buttonCancelIndex;
-    @FXML private Button buttonNewSet;
+    @FXML private Button buttonReadValuesFile;
+    @FXML private Button buttonShowValuesFile;
     @FXML private Label lblPromptIndex;
     @FXML private Label lblLetterIndex;
     @FXML private ComboBox cbLetterIndex;
@@ -154,6 +158,9 @@ public class MainWindowController {
         buttonEditData.setDisable(true);
         buttonNewData.setDisable(true);
         buttonEditIndex.setDisable(true);
+        // TODO: read set values from file
+        buttonReadValuesFile.setDisable(true);
+        buttonShowValuesFile.setDisable(true);
         disableVariableFields(true);
         disableCoefFields(true);
         disableIndexFields(true);
@@ -164,13 +171,13 @@ public class MainWindowController {
         cbDimensionVar.setItems(observableDimensionList);
         cbLetterVar.setItems(unusedLetters);
         cbLetterCoef.setItems(unusedLetters);
-        cbSet.setItems(observableDomainList);
+        cbSet.setItems(unusedSetLetters);
         cbLetterIndex.setItems(unusedIndexLetters);
         resetVarFields();
         resetCoefFields();
         resetIndexFields();
         cbDomainVar.setValue(cbDomainVar.getItems().get(2));
-        cbSet.setValue(cbSet.getItems().get(2));
+        cbSet.setValue(cbSet.getItems().get(0));
         lblPromptVar.setText("");
         lblPromptCoef.setText("");
         lblPromptIndex.setText("");
@@ -274,6 +281,8 @@ public class MainWindowController {
                 SumIndex removedIndex = mIndexes.remove(editIndex);
                 unusedIndexLetters.add(String.valueOf(removedIndex.getLetter()));
                 FXCollections.sort(unusedIndexLetters);
+                unusedSetLetters.add(String.valueOf(removedIndex.getSet()));
+                FXCollections.sort(unusedSetLetters);
                 buttonEditIndex.setDisable(true);
                 buttonNewIndex.setDisable(false);
                 //TODO: reflect remove on model
@@ -442,7 +451,7 @@ public class MainWindowController {
                     drawMathElement(formula.turnColorBackTo(Color.black), formula.getAlignment());
                     Dialogs dialogs = new Dialogs();
                     if (mathElement.getExpression() instanceof Summation) {
-                        dialogs.callSummationDialog(formula, mathElement);
+                        dialogs.callSummationDialog(formula, mathElement, observableIndexList, mIndexes);
                     } else if (mathElement.getExpression() instanceof Constant) {
                         dialogs.callConstantDialog(formula, mathElement);
                     }
@@ -559,12 +568,12 @@ public class MainWindowController {
                 if (beingDragged.getExpression() instanceof Summation) {
                     Summation summation = new Summation();
                     mathElement = new MathElement(beingDragged, summation);
-                    if (!dialogs.callSummationDialog(formulas.first(), mathElement))
+                    if (!dialogs.callSummationDialog(lastModifiedFormula, mathElement, observableIndexList, mIndexes))
                         addME = false;
                 } else if (beingDragged.getExpression() instanceof Constant) {
                     Constant constant = new Constant();
                     mathElement = new MathElement(beingDragged, constant);
-                    if (!dialogs.callConstantDialog(formulas.first(), mathElement))
+                    if (!dialogs.callConstantDialog(lastModifiedFormula, mathElement))
                         addME = false;
                 } else if (beingDragged.getExpression() instanceof Sum) {
                     Sum sum = new Sum();
@@ -871,12 +880,13 @@ public class MainWindowController {
                 editIndexFlag = true;
                 disableIndexFields(false);
             }
-        } else if (!editIndexFlag && valuesChecked) {    // adding new variable
+        } else if (!editIndexFlag && valuesChecked) {    // adding new index
             SumIndex sumIndex = new SumIndex(cbLetterIndex.getValue().toString().trim().charAt(0),
                     cbSet.getValue().toString().trim().charAt(0),
-                    Double.parseDouble(textStartValue.getText()), Double.parseDouble(textEndValue.getText()));
+                    Integer.parseInt(textStartValue.getText()), Integer.parseInt(textEndValue.getText()));
             // Letter is now used
             unusedIndexLetters.remove(cbLetterIndex.getSelectionModel().getSelectedIndex());
+            unusedSetLetters.remove(cbSet.getSelectionModel().getSelectedIndex());
             // GUI reaction
             mIndexes.add(sumIndex);
             Collections.sort(mIndexes);
@@ -888,13 +898,14 @@ public class MainWindowController {
             // setting buttons and flags
             disableIndexFields(true);
             resetIndexFields();
-            if (unusedIndexLetters.size() > 0)
+            if (unusedIndexLetters.size() > 0 && unusedSetLetters.size() > 0)
                 buttonNewIndex.setDisable(false);
             buttonEditIndex.setText("Edit");
             buttonEditIndex.setDisable(true);
         } else if (valuesChecked) {    // done editing variable
             // changing letter
             String oldLetter = String.valueOf(mIndexes.get(editIndex).getLetter());
+            String oldSet = String.valueOf(mIndexes.get(editIndex).getSet());
             // editing data structure
             mIndexes.get(editIndex).setLetter(cbLetterIndex.getValue().toString().charAt(0));
             if (!oldLetter.equalsIgnoreCase(cbLetterIndex.getValue().toString())) {
@@ -902,9 +913,14 @@ public class MainWindowController {
                 unusedIndexLetters.add(oldLetter);
                 FXCollections.sort(unusedIndexLetters);
             }
+            if (!oldSet.equalsIgnoreCase(cbSet.getValue().toString())) {
+                unusedSetLetters.remove(cbSet.getSelectionModel().getSelectedIndex());
+                unusedSetLetters.add(oldSet);
+                FXCollections.sort(unusedSetLetters);
+            }
             mIndexes.get(editIndex).setSet(cbSet.getValue().toString().trim().charAt(0));
-            mIndexes.get(editIndex).setStartValue(Double.parseDouble(textStartValue.getText()));
-            mIndexes.get(editIndex).setEndValue(Double.parseDouble(textEndValue.getText()));
+            mIndexes.get(editIndex).setStartAndEndValue(Integer.parseInt(textStartValue.getText()),
+                    Integer.parseInt(textEndValue.getText()));
             // GUI response
             SumIndex sumIndex = mIndexes.get(editIndex);
             observableIndexList.set(editIndex, sumIndex.getLetter() + " \u2208 " +
@@ -917,7 +933,7 @@ public class MainWindowController {
             resetIndexFields();
             buttonEditIndex.setText("Edit");
             buttonEditIndex.setDisable(true);
-            if (unusedIndexLetters.size() > 0)
+            if (unusedIndexLetters.size() > 0 && unusedSetLetters.size() > 0)
                 buttonNewIndex.setDisable(false);
         }
     }
@@ -1042,7 +1058,7 @@ public class MainWindowController {
     public void cancelIndexClicked() {
         resetIndexFields();
         disableIndexFields(true);
-        if (unusedIndexLetters.size() > 0)
+        if (unusedIndexLetters.size() > 0 && unusedSetLetters.size() > 0)
             buttonNewIndex.setDisable(false);
         buttonEditIndex.setText("Edit");
         buttonEditIndex.setDisable(true);
@@ -1089,7 +1105,6 @@ public class MainWindowController {
 
     private void disableIndexFields(boolean arg) {
         buttonCancelIndex.setDisable(arg);
-        buttonNewSet.setDisable(arg);
         lblLetterIndex.setDisable(arg);
         cbLetterIndex.setDisable(arg);
         lblPreDefSets.setDisable(arg);

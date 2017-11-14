@@ -88,7 +88,7 @@
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
                         <Button fx:id="buttonReadValuesFile" layoutX="1000.0" layoutY="10.0" mnemonicParsing="false" prefHeight="26.0" prefWidth="160.0" text="Read values from file" />
-                        <Button fx:id="buttonNewIndex" layoutX="15.0" layoutY="8.0" mnemonicParsing="false" onAction="#newIndexClicked" prefHeight="25.0" prefWidth="120.0" text="Add new index" />
+                        <Button fx:id="buttonNewIndex" layoutX="15.0" layoutY="8.0" mnemonicParsing="false" onAction="#newIndexClicked" prefHeight="25.0" prefWidth="120.0" text="Add new indexes" />
                         <Label fx:id="lblPromptIndex" layoutX="245.0" layoutY="25.0" text="Editing X:" />
                         <Label fx:id="lblLetterIndex" layoutX="397.0" layoutY="10.0" text="Letter" />
                         <ComboBox fx:id="cbLetterIndex" layoutX="397.0" layoutY="30.0" prefHeight="25.0" prefWidth="80.0" />

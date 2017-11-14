@@ -13,14 +13,14 @@ public class CoefficientTest {
 
     @Before
     public void setUp() throws Exception {
-        bigA.addIndex("n");
-        bigA.addIndex("j");
-        bigA.addIndex("2");
+        bigA.addIndex('n');
+        bigA.addIndex('j');
+        bigA.addIndex('2');
     }
 
     @Test
     public void getLetter() throws Exception {
-        assertEquals(bigA.getLetter(), "A");
+        assertEquals(bigA.getLetter(), 'A');
     }
 
     @Test

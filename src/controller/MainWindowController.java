@@ -281,8 +281,6 @@ public class MainWindowController {
                 SumIndex removedIndex = mIndexes.remove(editIndex);
                 unusedIndexLetters.add(String.valueOf(removedIndex.getLetter()));
                 FXCollections.sort(unusedIndexLetters);
-                unusedSetLetters.add(String.valueOf(removedIndex.getSet()));
-                FXCollections.sort(unusedSetLetters);
                 buttonEditIndex.setDisable(true);
                 buttonNewIndex.setDisable(false);
                 //TODO: reflect remove on model
@@ -599,10 +597,43 @@ public class MainWindowController {
                 } else if (beingDragged.getExpression() instanceof Coefficient) {
                     Coefficient coefficient = new Coefficient(((Coefficient) beingDragged.getExpression()).getLetter());
                     mathElement = new MathElement(beingDragged, coefficient);
+                    // finding the dimension number
+                    int dimension = 0;
+                    for (model.Coefficient coefficientModel : mCoefficients) {
+                        if (coefficientModel.getLetter() == coefficient.getLetter()) {
+                            dimension = coefficientModel.getDimension();
+                            break;
+                        }
+                    }
+                    if (!dialogs.callCoefficientDialog(lastModifiedFormula, mathElement,
+                            observableIndexList, mIndexes, dimension))
+                        addME = false;
                 }
                 if (addME && mathElement != null) {
                     try {
                         lastModifiedFormula.addMathElement(mathElement, mathElement.getXStart());
+                        if (mathElement.getExpression() instanceof Coefficient) {
+                            for (MathElement element : lastModifiedFormula.getMathElements()) {
+                                if ((element.getExpression() instanceof LessOrEqual ||
+                                        element.getExpression() instanceof GreaterOrEqual) &&
+                                        element.getXStart() < mathElement.getXStart()) {
+                                    char set = '?';
+                                    for (SumIndex sumIndex : mIndexes) {
+                                        for (Character coefIndex : ((Coefficient) mathElement.getExpression()).getIndexes()) {
+                                            if (sumIndex.getLetter() == coefIndex) {
+                                                set = sumIndex.getSet();
+                                                break;  // Attention: all diferent indexes should have the same set
+                                                // TODO: check consistency on the Sets!
+                                            }
+                                        }
+                                    }
+                                    MathElement forAll = new MathElement(new ForAll(
+                                        ((Coefficient) mathElement.getExpression()).getIndexes(), set));
+                                    lastModifiedFormula.addMathElementAtTheEnd(forAll);
+                                    break;
+                                }
+                            }
+                        }
                     } catch (NullPointerException e) {
 //                        System.out.printf("Invalid MathElement or its X start position");
                         e.printStackTrace();
@@ -886,7 +917,6 @@ public class MainWindowController {
                     Integer.parseInt(textStartValue.getText()), Integer.parseInt(textEndValue.getText()));
             // Letter is now used
             unusedIndexLetters.remove(cbLetterIndex.getSelectionModel().getSelectedIndex());
-            unusedSetLetters.remove(cbSet.getSelectionModel().getSelectedIndex());
             // GUI reaction
             mIndexes.add(sumIndex);
             Collections.sort(mIndexes);
@@ -898,7 +928,7 @@ public class MainWindowController {
             // setting buttons and flags
             disableIndexFields(true);
             resetIndexFields();
-            if (unusedIndexLetters.size() > 0 && unusedSetLetters.size() > 0)
+            if (unusedIndexLetters.size() > 0)
                 buttonNewIndex.setDisable(false);
             buttonEditIndex.setText("Edit");
             buttonEditIndex.setDisable(true);
@@ -912,11 +942,6 @@ public class MainWindowController {
                 unusedIndexLetters.remove(cbLetterIndex.getSelectionModel().getSelectedIndex());
                 unusedIndexLetters.add(oldLetter);
                 FXCollections.sort(unusedIndexLetters);
-            }
-            if (!oldSet.equalsIgnoreCase(cbSet.getValue().toString())) {
-                unusedSetLetters.remove(cbSet.getSelectionModel().getSelectedIndex());
-                unusedSetLetters.add(oldSet);
-                FXCollections.sort(unusedSetLetters);
             }
             mIndexes.get(editIndex).setSet(cbSet.getValue().toString().trim().charAt(0));
             mIndexes.get(editIndex).setStartAndEndValue(Integer.parseInt(textStartValue.getText()),
@@ -933,7 +958,7 @@ public class MainWindowController {
             resetIndexFields();
             buttonEditIndex.setText("Edit");
             buttonEditIndex.setDisable(true);
-            if (unusedIndexLetters.size() > 0 && unusedSetLetters.size() > 0)
+            if (unusedIndexLetters.size() > 0)
                 buttonNewIndex.setDisable(false);
         }
     }
@@ -1058,7 +1083,7 @@ public class MainWindowController {
     public void cancelIndexClicked() {
         resetIndexFields();
         disableIndexFields(true);
-        if (unusedIndexLetters.size() > 0 && unusedSetLetters.size() > 0)
+        if (unusedIndexLetters.size() > 0)
             buttonNewIndex.setDisable(false);
         buttonEditIndex.setText("Edit");
         buttonEditIndex.setDisable(true);

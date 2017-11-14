@@ -8,6 +8,7 @@ import javafx.scene.layout.GridPane;
 import model.Formula;
 import model.MathElement;
 import model.SumIndex;
+import model.math.Coefficient;
 import model.math.Constant;
 import model.math.Summation;
 
@@ -37,10 +38,15 @@ public class Dialogs {
         return result;
     }
 
-    public Optional<List<String>> summationDialog(ObservableList<String> indexList) {
+    public Optional<List<String>> indexDialog(ObservableList<String> indexList, boolean forSum, int nIndexes) {
         mDialog = new Dialog<>();
-        mDialog.setTitle("Summation Dialog");
-        mDialog.setHeaderText("Choose an index");
+        if (forSum) {
+            mDialog.setTitle("Summation Dialog");
+            mDialog.setHeaderText("Choose an index");
+        } else {
+            mDialog.setTitle("Coefficient Domain Dialog");
+            mDialog.setHeaderText("Choose an index to set the coefficient domain");
+        }
 
         //Set the icon (must be included in the project).
 //        File file = new File("C:\\Users\\Danilo\\Documents\\JavaFXProjects\\Optimal\\img");
@@ -58,38 +64,49 @@ public class Dialogs {
         grid.setVgap(10);
         grid.setPadding(new Insets(20, 150, 10, 10));
 
-        ComboBox<String> indexChoice = new ComboBox<>();
-        indexChoice.setPrefWidth(250);
-        if (indexList.size() == 0)
-            indexChoice.getItems().add("No index has been created");
-        else
-            indexChoice.getItems().addAll(indexList);
-        indexChoice.getSelectionModel().select(0);
-
-
-        grid.add(new Label("Choose an index:"), 0, 0);
-        grid.add(indexChoice, 1, 0);
-
-        // Enable/Disable ok button depending on whether a startingPoint was entered.
-//        Node okBtn = mDialog.getDialogPane().lookupButton(okButton);
-//        okBtn.setDisable(true);
-
+        ArrayList<ComboBox<String>> indexChoices = new ArrayList<>();
+        if (forSum) {
+            ComboBox<String> singleCB = new ComboBox<>();
+            indexChoices.add(singleCB);
+            indexChoices.get(0).setPrefWidth(250);
+            if (indexList.size() == 0)
+                indexChoices.get(0).getItems().add("No index has been created");
+            else
+                indexChoices.get(0).getItems().addAll(indexList);
+            indexChoices.get(0).getSelectionModel().select(0);
+            grid.add(new Label("Choose an index:"), 0, 0);
+            grid.add(indexChoices.get(0), 1, 0);
+        } else {
+            for (int i = 0; i < nIndexes; i++) {
+                indexChoices.add(new ComboBox<String>());
+                indexChoices.get(i).setPrefWidth(250);
+                if (indexList.size() == 0)
+                    indexChoices.get(i).getItems().add("No index has been created");
+                else
+                    indexChoices.get(i).getItems().addAll(indexList);
+                indexChoices.get(i).getSelectionModel().select(0);
+                grid.add(new Label("Choose an index for dimension " + (i+1) + ":"), 0, i);
+                grid.add(indexChoices.get(i), 1, i);
+            }
+        }
         mDialog.getDialogPane().setContent(grid);
 
         // Request focus on the startingPoint field by default.
-        Platform.runLater(() -> indexChoice.requestFocus());
+        Platform.runLater(() -> indexChoices.get(0).requestFocus());
 
         // Convert the mResult to a startingPoint-endingPoint-pair when the ok button is clicked.
         mDialog.setResultConverter(dialogButton -> {
             if (dialogButton == okButton) {
-                List<String> indexSelected = new ArrayList<>();
+                ArrayList<String> indexesSelected = new ArrayList<>();
                 for (String sumIndex : indexList) {
-                    if (indexChoice.getValue().charAt(0) != 'N' &&
-                            sumIndex.charAt(0) == indexChoice.getValue().charAt(0)) {
-                        indexSelected.add(indexChoice.getValue());
+                    for (int i = 0; i < indexChoices.size(); i++) {
+                        if (indexChoices.get(i).getValue().charAt(0) != 'N' &&
+                                sumIndex.charAt(0) == indexChoices.get(i).getValue().charAt(0)){
+                            indexesSelected.add(sumIndex);
+                        }
                     }
                 }
-                return indexSelected;
+                return indexesSelected;
             }
             return null;
         });
@@ -111,7 +128,7 @@ public class Dialogs {
 
     public boolean callSummationDialog(Formula formula, MathElement mathElement,
                                        ObservableList<String> indexStringList, ArrayList<SumIndex> indexList) {
-        Optional<List<String>> result = summationDialog(indexStringList);
+        Optional<List<String>> result = indexDialog(indexStringList, true, 1);
         resultFromDialogs = false;
         result.ifPresent(indexes -> {
             if (result.get().size() > 0)
@@ -136,6 +153,27 @@ public class Dialogs {
             }
         } else {
             System.out.println("User cancelled the input summation");
+        }
+        return resultFromDialogs;
+    }
+
+    public boolean callCoefficientDialog(Formula formula, MathElement mathElement,
+                                         ObservableList<String> indexStringList, ArrayList<SumIndex> indexList,
+                                         int dimension) {
+        Optional<List<String>> result = indexDialog(indexStringList, false, dimension);
+        resultFromDialogs = false;
+        result.ifPresent(indexes -> {
+            if (result.get().size() > 0)
+                resultFromDialogs = true;
+        });
+        if (resultFromDialogs) {    // it has at least one element
+            for (String index : result.get()) {
+                ((Coefficient)mathElement.getExpression()).addIndex(index.charAt(0));
+            }
+            formula.setLastMathElementModified(mathElement);
+            mathElement.updateIcon(formula.getAlignment());
+        } else {
+            System.out.println("User cancelled the input number");
         }
         return resultFromDialogs;
     }

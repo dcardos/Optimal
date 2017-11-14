@@ -7,11 +7,16 @@ import java.util.Vector;
  */
 public class Coefficient extends Element implements Expression {
     private char mLetter;
-    private Vector<String> mIndexes;
+    private Vector<Character> mIndexes;
 
     public Coefficient(char letter) {
         this.mIndexes = new Vector<>();
         this.mLetter = letter;
+    }
+
+    public Coefficient(char letter, Vector<Character> indexes) {
+        mLetter = letter;
+        mIndexes = indexes;
     }
 
     public char getLetter() {
@@ -22,15 +27,15 @@ public class Coefficient extends Element implements Expression {
         mLetter = letter;
     }
 
-    public Vector<String> getIndexes() {
+    public Vector<Character> getIndexes() {
         return mIndexes;
     }
 
-    public void setIndexes(Vector<String> indexes) {
+    public void setIndexes(Vector<Character> indexes) {
         mIndexes = indexes;
     }
 
-    public void addIndex(String n) {
+    public void addIndex(Character n) {
         mIndexes.add(n);
     }
 
@@ -48,7 +53,7 @@ public class Coefficient extends Element implements Expression {
 
         latex.append("_{");
 
-        for (String e : mIndexes) {
+        for (Character e : mIndexes) {
             latex.append(e);
         }
 

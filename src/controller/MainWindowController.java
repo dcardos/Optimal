@@ -23,10 +23,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import model.Formula;
-import model.MathElement;
-import model.SumIndex;
-import model.Variable;
+import model.*;
 import model.math.*;
 import org.jfree.fx.FXGraphics2D;
 
@@ -41,15 +38,15 @@ public class MainWindowController {
     private static final double YVARPOS = 50.0;
     private static final double YCOEFPOS = 80.0;
 
-    private Main mMain;
+    public Main mMain;
     private FXGraphics2D g2;
 
-    private TreeSet<Formula> formulas;
+    public TreeSet<Formula> formulas;
     private Formula lastModifiedFormula;
     private MathElement beingDragged;
-    private final ArrayList<Variable> mVariables = new ArrayList<>();
-    private final ArrayList<model.Coefficient> mCoefficients = new ArrayList<>();
-    private final ArrayList<SumIndex> mIndexes = new ArrayList<>();
+    public final ArrayList<Variable> mVariables = new ArrayList<>();
+    public final ArrayList<model.Coefficient> mCoefficients = new ArrayList<>();
+    public final ArrayList<SumIndex> mIndexes = new ArrayList<>();
 
     private final ToggleGroup mMaxMin = new ToggleGroup();
 
@@ -75,7 +72,7 @@ public class MainWindowController {
             "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W",
             "X", "Y", "Z");
 
-    public model.Coefficient mCoefficientBeingUsed = new model.Coefficient('A', 1);
+    public model.Coefficient mCoefficientBeingUsed = null;
 
     @FXML private Label lblMainFunction;
     @FXML private Label lblPromptVar;
@@ -331,6 +328,7 @@ public class MainWindowController {
                         lblPromptCoef.setText("Coefficient " + mCoefficients.get(editIndex).getLetter() + " selected");
                         cbLetterCoef.setValue(mCoefficients.get(editIndex).getLetter());
                         buttonEditCoef.setDisable(false);
+                        mCoefficientBeingUsed = mCoefficients.get(editIndex);
                     } else
                         buttonEditCoef.setDisable(true);
                 } else if (event.getButton() == MouseButton.SECONDARY && editIndex > -1) {
@@ -598,11 +596,19 @@ public class MainWindowController {
                     Coefficient coefficient = new Coefficient(((Coefficient) beingDragged.getExpression()).getLetter());
                     mathElement = new MathElement(beingDragged, coefficient);
                     // finding the dimension number
-                    int dimension = 0;
+                    int dimension = -1;
                     for (model.Coefficient coefficientModel : mCoefficients) {
                         if (coefficientModel.getLetter() == coefficient.getLetter()) {
                             dimension = coefficientModel.getDimension();
                             break;
+                        }
+                    }
+                    if (dimension == -1) {
+                        for (Variable variable : mVariables) {
+                            if (variable.getLetter() == coefficient.getLetter()) {
+                                dimension = variable.getDimension();
+                                break;
+                            }
                         }
                     }
                     if (!dialogs.callCoefficientDialog(lastModifiedFormula, mathElement,
@@ -612,26 +618,29 @@ public class MainWindowController {
                 if (addME && mathElement != null) {
                     try {
                         lastModifiedFormula.addMathElement(mathElement, mathElement.getXStart());
+                        boolean coefAfterComparasion = false;
                         if (mathElement.getExpression() instanceof Coefficient) {
                             for (MathElement element : lastModifiedFormula.getMathElements()) {
                                 if ((element.getExpression() instanceof LessOrEqual ||
                                         element.getExpression() instanceof GreaterOrEqual) &&
                                         element.getXStart() < mathElement.getXStart()) {
-                                    char set = '?';
-                                    for (SumIndex sumIndex : mIndexes) {
-                                        for (Character coefIndex : ((Coefficient) mathElement.getExpression()).getIndexes()) {
-                                            if (sumIndex.getLetter() == coefIndex) {
-                                                set = sumIndex.getSet();
-                                                break;  // Attention: all diferent indexes should have the same set
-                                                // TODO: check consistency on the Sets!
-                                            }
-                                        }
-                                    }
-                                    MathElement forAll = new MathElement(new ForAll(
-                                        ((Coefficient) mathElement.getExpression()).getIndexes(), set));
-                                    lastModifiedFormula.addMathElementAtTheEnd(forAll);
+                                    coefAfterComparasion = true;
                                     break;
                                 }
+                            }
+                            if (coefAfterComparasion) {
+                                char set = '?';
+                                Coefficient modelCoef = (Coefficient)mathElement.getExpression();
+                                for (SumIndex sumIndex : mIndexes) {
+                                    if (sumIndex.getLetter() == modelCoef.getIndexes().lastElement()) {
+                                        set = sumIndex.getSet();
+                                        break;  // Attention: the set if regarding the last index of the coefficient
+                                        // TODO: check consistency on the Sets!
+                                    }
+                                }
+                                MathElement forAll = new MathElement(new ForAll(
+                                        ((Coefficient) mathElement.getExpression()).getIndexes(), set));
+                                lastModifiedFormula.addMathElementAtTheEnd(forAll);
                             }
                         }
                     } catch (NullPointerException e) {
@@ -685,7 +694,7 @@ public class MainWindowController {
             for (MathElement oldMathElement : mahElementsToBeRemoved) {
                 formula.removeMathElement(oldMathElement);
                 formula.setActiveEditing(true);
-                MathElement newMathElement = new MathElement(newCoef.getMathElement().getExpression());
+                MathElement newMathElement = new MathElement(newCoef);
                 formula.addMathElement(newMathElement, oldMathElement.getXStart());
                 formula.setActiveEditing(false);
             }
@@ -840,7 +849,7 @@ public class MainWindowController {
                 disableCoefFields(false);
             }
         } else if (!editCoefficientFlag) {  // adding new coefficient
-            if (mCoefficientBeingUsed.getData() == null) {
+            if (mCoefficientBeingUsed == null || mCoefficientBeingUsed.getData() == null) {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
                 alert.setTitle("Attention");
                 alert.setHeaderText(null);
@@ -869,6 +878,7 @@ public class MainWindowController {
                 buttonEditCoef.setDisable(true);
                 buttonCancelCoef.setDisable(true);
                 buttonNewData.setDisable(true);
+                mCoefficientBeingUsed = null;
             }
         } else if (editCoefficientFlag) {   // done editing coefficient
             // changing letter
@@ -898,6 +908,7 @@ public class MainWindowController {
                 buttonNewCoefficient.setDisable(false);
             buttonCancelCoef.setDisable(true);
             buttonEditData.setDisable(true);
+            mCoefficientBeingUsed = null;
         }
     }
 
@@ -1078,6 +1089,7 @@ public class MainWindowController {
         buttonCancelCoef.setDisable(true);
         buttonNewData.setDisable(true);
         buttonEditData.setDisable(true);
+        mCoefficientBeingUsed = null;
     }
 
     public void cancelIndexClicked() {
@@ -1168,6 +1180,7 @@ public class MainWindowController {
             // Disabling other nodes
             tabPane.getSelectionModel().select(tabModel);
             tabVar.setDisable(true);
+            tabCoefData.setDisable(true);
             tabIndexSet.setDisable(true);
             accordionBase.setDisable(true);
             lblMainFunction.setDisable(true);
@@ -1199,6 +1212,7 @@ public class MainWindowController {
                     formula.getVBox().setDisable(false);
             }
             tabVar.setDisable(false);
+            tabCoefData.setDisable(false);
             tabIndexSet.setDisable(false);
             accordionBase.setDisable(false);
             lblMainFunction.setDisable(false);
@@ -1410,14 +1424,20 @@ public class MainWindowController {
 
     private void refreshVarsInModel() {
         hbVariables.getChildren().clear();
-        for (Variable variable : mVariables)
-            addMathElementToModel(variable.getMathElement(), hbVariables);
+        MathElement meVariable = null;
+        for (Variable variable : mVariables) {
+            meVariable = new MathElement(variable);
+            addMathElementToModel(meVariable, hbVariables);
+        }
     }
 
     private void refreshCoefsInModel() {
         hbCoefficients.getChildren().clear();
-        for (model.Coefficient coefficient : mCoefficients)
-            addMathElementToModel(coefficient.getMathElement(), hbCoefficients);
+        MathElement meCoefficient = null;
+        for (model.Coefficient coefficient : mCoefficients) {
+            meCoefficient = new MathElement(coefficient);
+            addMathElementToModel(meCoefficient, hbCoefficients);
+        }
     }
 
     private Formula getFormula(int yPosition) {
@@ -1429,8 +1449,7 @@ public class MainWindowController {
     }
 
     public void openDataWindow() {
-        mCoefficientBeingUsed.setLetter(cbLetterCoef.getValue().toString().charAt(0));
-        mCoefficientBeingUsed.setData(null);
+        mCoefficientBeingUsed = new Coefficient(cbLetterCoef.getValue().toString().charAt(0));
         FXMLLoader loader = new FXMLLoader(Main.class.getResource("/view/dataWindowView.fxml"));
         AnchorPane pane;
         try {
@@ -1469,5 +1488,10 @@ public class MainWindowController {
         buttonEditIndex.setDisable(false);
         buttonNewIndex.setDisable(true);
         editIndexFlag = false;
+    }
+
+    public void exportLPClicked() {
+        LPFileGenerator lpFileGenerator = new LPFileGenerator();
+        lpFileGenerator.saveLPFile(this);
     }
 }

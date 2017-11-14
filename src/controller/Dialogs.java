@@ -5,10 +5,10 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import model.Coefficient;
 import model.Formula;
 import model.MathElement;
 import model.SumIndex;
-import model.math.Coefficient;
 import model.math.Constant;
 import model.math.Summation;
 
@@ -44,8 +44,8 @@ public class Dialogs {
             mDialog.setTitle("Summation Dialog");
             mDialog.setHeaderText("Choose an index");
         } else {
-            mDialog.setTitle("Coefficient Domain Dialog");
-            mDialog.setHeaderText("Choose an index to set the coefficient domain");
+            mDialog.setTitle("Domain Dialog");
+            mDialog.setHeaderText("Choose an index to set the dimension domain");
         }
 
         //Set the icon (must be included in the project).

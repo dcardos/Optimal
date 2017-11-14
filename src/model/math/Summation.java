@@ -1,5 +1,7 @@
 package model.math;
 
+import model.Coefficient;
+
 /**
  * Created by Danilo on 09/09/2016.
  */

@@ -1,8 +1,10 @@
 package model.math;
 
+import model.Coefficient;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Created by Danilo on 10/09/2016.

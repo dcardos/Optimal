@@ -87,8 +87,8 @@ public class MainWindowController {
     @FXML private Canvas canvas;
     @FXML private AnchorPane innerAnchorPane;
     @FXML private AnchorPane anchorPaneModel;
-    @FXML private RadioButton rdBtnMax;
-    @FXML private RadioButton rdBtnMin;
+    @FXML public RadioButton rdBtnMax;
+    @FXML public RadioButton rdBtnMin;
     @FXML private Label lblConstraints;
     @FXML private TabPane tabPane;
     @FXML private Tab tabVar;

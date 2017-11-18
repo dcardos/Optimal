@@ -1495,8 +1495,8 @@ public class MainWindowController {
     }
 
     public void exportLPClicked() {
-        LPFileGenerator lpFileGenerator = new LPFileGenerator();
-        lpFileGenerator.saveLPFile(this);
+        LPFileGenerator lpFileGenerator = new LPFileGenerator(this);
+        lpFileGenerator.saveLPFile();
     }
 
     public Coefficient getCoefVarData(char letter) {

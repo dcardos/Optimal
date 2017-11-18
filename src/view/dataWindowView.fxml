@@ -21,7 +21,7 @@
       <Label fx:id="labelColumnsNumber" layoutX="170.0" layoutY="30.0" text="Columns" />
       <TextField fx:id="textRowsNumber" layoutX="110.0" layoutY="50.0" prefHeight="31.0" prefWidth="50.0" />
       <TextField fx:id="textColumnsNumber" layoutX="170.0" layoutY="50.0" prefHeight="31.0" prefWidth="50.0" />
-      <Button fx:id="buttonImportFile" layoutX="260.0" layoutY="60.0" mnemonicParsing="false" text="Import from file" />
+      <Button fx:id="buttonImportFile" layoutX="260.0" layoutY="60.0" mnemonicParsing="false" prefHeight="31.0" prefWidth="125.0" text="Import from file" />
       <Button fx:id="buttonFillValues" layoutX="260.0" layoutY="20.0" mnemonicParsing="false" onAction="#fillDataCliked" prefHeight="31.0" prefWidth="125.0" text="Fill Values" />
       <Button fx:id="buttonCancel" layoutX="400.0" layoutY="20.0" mnemonicParsing="false" onAction="#cancelClicked" prefWidth="80.0" text="Cancel" />
       <Button fx:id="buttonDone" layoutX="400.0" layoutY="60.0" mnemonicParsing="false" onAction="#done" prefWidth="80.0" text="Done" />

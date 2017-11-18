@@ -163,7 +163,7 @@
           </TitledPane>
         </panes>
       </Accordion>
-      <Button mnemonicParsing="false" onAction="#exportLPClicked" prefHeight="28.0" prefWidth="150.0" text="Export to LP" AnchorPane.bottomAnchor="1.0" AnchorPane.rightAnchor="160.0" />
+      <Button fx:id="buttonExportLP" mnemonicParsing="false" onAction="#exportLPClicked" prefHeight="28.0" prefWidth="150.0" text="Export to LP" AnchorPane.bottomAnchor="1.0" AnchorPane.rightAnchor="160.0" />
       <Button fx:id="buttonNewConstraint" layoutX="842.0" layoutY="819.0" mnemonicParsing="false" onAction="#addNewConstraint" prefHeight="28.0" prefWidth="150.0" text="Add new constraint" AnchorPane.bottomAnchor="1.0" AnchorPane.rightAnchor="1.0" />
    </children>
 </AnchorPane>

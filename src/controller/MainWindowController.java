@@ -44,9 +44,9 @@ public class MainWindowController {
     public TreeSet<Formula> formulas;
     private Formula lastModifiedFormula;
     private MathElement beingDragged;
-    public final ArrayList<Variable> mVariables = new ArrayList<>();
-    public final ArrayList<model.Coefficient> mCoefficients = new ArrayList<>();
-    public final ArrayList<SumIndex> mIndexes = new ArrayList<>();
+    private final ArrayList<Variable> mVariables = new ArrayList<>();
+    private final ArrayList<model.Coefficient> mCoefficients = new ArrayList<>();
+    private final ArrayList<SumIndex> mIndexes = new ArrayList<>();
 
     private final ToggleGroup mMaxMin = new ToggleGroup();
 
@@ -60,7 +60,7 @@ public class MainWindowController {
     private final ObservableList<String> observableDomainList = FXCollections.observableArrayList(
             "\u2115  Natural", "\u2124  Integer", "\u211d  Real");
     private final ObservableList<String> observableDimensionList = FXCollections.observableArrayList(
-            "1", "2", "3", "4", "5");
+            "1", "2", "3");
     private final ObservableList<String> unusedLetters = FXCollections.observableArrayList(
             "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o",
             "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z");
@@ -109,6 +109,7 @@ public class MainWindowController {
     @FXML private Button buttonNewCoefficient;
     @FXML private Button buttonNewData;
     @FXML private Button buttonEditData;
+    @FXML private Button buttonExportLP;
     @FXML private ComboBox cbDomainVar;
     @FXML private CheckBox checkNonNegative;
     @FXML private ComboBox cbLetterVar;
@@ -155,6 +156,7 @@ public class MainWindowController {
         buttonEditData.setDisable(true);
         buttonNewData.setDisable(true);
         buttonEditIndex.setDisable(true);
+        buttonExportLP.setDisable(true);
         // TODO: read set values from file
         buttonReadValuesFile.setDisable(true);
         buttonShowValuesFile.setDisable(true);
@@ -1178,6 +1180,7 @@ public class MainWindowController {
         // Button's action
         buttonDesignFormula.setOnMouseClicked(event -> {
             // Disabling other nodes
+            buttonExportLP.setDisable(true);
             tabPane.getSelectionModel().select(tabModel);
             tabVar.setDisable(true);
             tabCoefData.setDisable(true);
@@ -1222,6 +1225,7 @@ public class MainWindowController {
             formulaArg.setActiveEditing(false);
             formulaArg.getVBox().getChildren().remove(buttonStopEditing);
             if (!formulaArg.getMathElements().isEmpty()) {
+                buttonExportLP.setDisable(false);
                 buttonDesignFormula.setText("Edit Formula");
                 buttonLateX.setText("Edit Latex Formula");
                 if (!formulaArg.isMainFunction())
@@ -1493,5 +1497,23 @@ public class MainWindowController {
     public void exportLPClicked() {
         LPFileGenerator lpFileGenerator = new LPFileGenerator();
         lpFileGenerator.saveLPFile(this);
+    }
+
+    public Coefficient getCoefVarData(char letter) {
+        for (Coefficient coefficient : mCoefficients) {
+            if (coefficient.getLetter() == letter) {
+                return coefficient;
+            }
+        }
+        return null;
+    }
+
+    public SumIndex getIndexData (char letter) {
+        for (SumIndex sumIndex : mIndexes) {
+            if (sumIndex.getLetter() == letter) {
+                return sumIndex;
+            }
+        }
+        return null;
     }
 }

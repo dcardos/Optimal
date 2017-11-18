@@ -383,6 +383,7 @@ public class MainWindowController {
         // Initializing radio buttons
         rdBtnMax.setToggleGroup(mMaxMin);
         rdBtnMin.setToggleGroup(mMaxMin);
+        rdBtnMin.setSelected(true);
 
         // Initializing Model Tab with math elements
         makeModelBasicElements();
@@ -1513,6 +1514,14 @@ public class MainWindowController {
             if (sumIndex.getLetter() == letter) {
                 return sumIndex;
             }
+        }
+        return null;
+    }
+
+    public Variable getVarData(char letter) {
+        for (Variable variable : mVariables) {
+            if (variable.getLetter() == letter)
+                return variable;
         }
         return null;
     }

@@ -13,7 +13,6 @@ import java.util.Vector;
 public class LPFileGenerator {
     private final FileChooser mFileChooser = new FileChooser();
     private MainWindowController mwc;
-    private Coefficient mVariable;
 
     public LPFileGenerator(MainWindowController mwc) {
         this.mwc = mwc;
@@ -43,19 +42,41 @@ public class LPFileGenerator {
                     if (formula.isMainFunction()) {
                         outFile.println();
                         outFile.println();
-                        outFile.print("s.a.");
+                        outFile.print("/* subject to */");
                     }
                     outFile.println();
                 }
-                Variable variable = mwc.getVarData(mVariable.getLetter());
-                // TODO: lower and upper bound limits
-                if (variable.getLowerBound() == null && variable.isNonNegative()) {
-                    outFile.println();
-                    SumIndex indexData = mwc.getIndexData(mVariable.getIndexes().firstElement());
-                    for (int i = 0; i < indexData.getSize(); i++) {
-                        outFile.println(String.valueOf(mVariable.getLetter()) + indexData.getValues()[i] + " >= 0;");
+                // All variables will be used for domain constraints (they might not have been used)
+                // for lower bound
+                outFile.println();
+                int k = 1;
+                for (Variable variable : mwc.mVariables) {
+                    if (variable.getLowerBound() != null) {
+                        SumIndex indexData = mwc.getIndexData(variable.getIndexes().firstElement());
+                        for (int i = 0; i < indexData.getSize(); i++) {
+                            outFile.print("D" + k++ + ": ");
+                            outFile.println(String.valueOf(variable.getLetter()) + indexData.getValues()[i] +
+                                    " >= " + variable.getLowerBound() + ";");
+                        }
+                    }
+                    if (variable.getLowerBound() == null && variable.isNonNegative()) {
+                        outFile.println();
+                        SumIndex indexData = mwc.getIndexData(variable.getIndexes().firstElement());
+                        for (int i = 0; i < indexData.getSize(); i++) {
+                            outFile.print("D" + k++ + ": ");
+                            outFile.println(String.valueOf(variable.getLetter()) + indexData.getValues()[i] + " >= 0;");
+                        }
+                    }
+                    if (variable.getUpperBound() != null) {
+                        SumIndex indexData = mwc.getIndexData(variable.getIndexes().firstElement());
+                        for (int i = 0; i < indexData.getSize(); i++) {
+                            outFile.print("D" + k++ + ": ");
+                            outFile.println(String.valueOf(variable.getLetter()) + indexData.getValues()[i] +
+                                    " <= " + variable.getUpperBound());
+                        }
                     }
                 }
+
                 outFile.close();
             } catch (IOException ex) {
                 System.out.println(ex.getMessage());
@@ -110,6 +131,7 @@ public class LPFileGenerator {
         boolean parenthesis = false;
         boolean afterComparison = false;
         ArrayList<Character> summationIndexes = new ArrayList<>();
+
         // first check - summation indexes, parenthesis and end of restriction
         for (MathElement mathElement : formula.getMathElements()) {
             if (mathElement.getExpression() instanceof Summation) {
@@ -159,6 +181,7 @@ public class LPFileGenerator {
                 }
             }
         }
+
         if (parenthesis) {
             System.out.println("Opening parenthesis without closing it");
         }
@@ -222,17 +245,24 @@ public class LPFileGenerator {
 //                            }
 //                        }
                     } else { // it is a variable
-                        mVariable = (Coefficient)mathElement.getExpression();
                         ArrayList<SumIndex> sumIndexes = getIndexesCoefData(((Coefficient)
                                 mathElement.getExpression()).getIndexes());
                         varLetter = ((Coefficient) mathElement.getExpression()).getLetter();
                         if (operation.size() == 0) {    // no calculation to be made, no parenthesis before
                             for (int i = 0; i < coefValues.get(0).length; i++) {
-                                out.print(coefValues.get(0)[i] + " ");
+                                if (i > 0) {
+                                    out.print(Math.abs(coefValues.get(0)[i]) + " ");
+                                } else {
+                                    out.print(coefValues.get(0)[i] + " ");
+                                }
                                 out.print(String.valueOf(varLetter));
                                 out.print(sumIndexes.get(0).getValues()[i]);
                                 if (i != coefValues.get(0).length - 1) {
-                                    out.print(" + ");
+                                    if (coefValues.get(0)[i+1] < 0) {
+                                        out.print(" - ");
+                                    } else {
+                                        out.print(" + ");
+                                    }
                                 }
                             }
                         } else {
@@ -246,11 +276,19 @@ public class LPFileGenerator {
                                         value = value - coefValues.get(k++)[i];
                                     }
                                 }
-                                out.print(value + " ");
+                                if (i > 0) {
+                                    out.print(Math.abs(value) + " ");
+                                } else {
+                                    out.print(value + " ");
+                                }
                                 out.print(String.valueOf(varLetter));
                                 out.print(sumIndexes.get(0).getValues()[i]);
                                 if (i != coefValues.get(0).length - 1) {
-                                    out.print(" + ");
+                                    if (coefValues.get(0)[i+1] < 0) {
+                                        out.print(" - ");
+                                    } else {
+                                        out.print(" + ");
+                                    }
                                 }
                             }
                         }
@@ -265,11 +303,16 @@ public class LPFileGenerator {
             } else if (mathElement.getExpression() instanceof GreaterOrEqual) {
                 out.print(" >= ");
                 afterComparison = true;
+            } else if (mathElement.getExpression() instanceof Equal) {
+                out.print(" = ");
+                afterComparison = true;
             } else if (mathElement.getExpression() instanceof Constant) {
                 if (afterComparison) {
                     out.print(((Constant) mathElement.getExpression()).getFloat());
                     break; // nothing more to print in this line
                 }
+            } else if (!parenthesis && mathElement.getExpression() instanceof Sum) {
+                out.print(" + ");
             }
         }
     }

@@ -37,6 +37,7 @@ public class Main extends Application {
         Scene scene = new Scene(pane);      // takes a pane as an argument
         //scene.getStylesheets().add(getClass().getResource("../view/styles.css").toExternalForm());
         mPrimaryStage.setScene(scene);       // set scene to the stage
+        mPrimaryStage.setTitle("Optimal");
         mPrimaryStage.setResizable(false);
         mPrimaryStage.show();
     }

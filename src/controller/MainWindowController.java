@@ -44,7 +44,7 @@ public class MainWindowController {
     public TreeSet<Formula> formulas;
     private Formula lastModifiedFormula;
     private MathElement beingDragged;
-    private final ArrayList<Variable> mVariables = new ArrayList<>();
+    public final ArrayList<Variable> mVariables = new ArrayList<>();
     private final ArrayList<model.Coefficient> mCoefficients = new ArrayList<>();
     private final ArrayList<SumIndex> mIndexes = new ArrayList<>();
 
@@ -615,7 +615,7 @@ public class MainWindowController {
                         }
                     }
                     if (!dialogs.callCoefficientDialog(lastModifiedFormula, mathElement,
-                            observableIndexList, mIndexes, dimension))
+                            observableIndexList, mIndexes, dimension, getCoefVarData(coefficient.getLetter())))
                         addME = false;
                 }
                 if (addME && mathElement != null) {
@@ -1168,12 +1168,13 @@ public class MainWindowController {
     private void addNewFormula(Formula formulaArg) throws Exception {
         // Setting initial buttons
         javafx.scene.control.Button buttonDesignFormula = new javafx.scene.control.Button("Design Formula");
-        javafx.scene.control.Button buttonLateX = new Button("LateX Formula");
+//        javafx.scene.control.Button buttonLateX = new Button("LateX Formula");
         javafx.scene.control.Button buttonStopEditing = new Button("Stop editing");
         javafx.scene.control.Button buttonDelete = new Button("Delete");    // just on constraints
         formulaArg.getVBox().setAlignment(Pos.CENTER);
-        formulaArg.getVBox().setSpacing(5);
-        formulaArg.getVBox().getChildren().addAll(buttonDesignFormula, buttonLateX, buttonDelete);
+        formulaArg.getVBox().setSpacing(10);
+//        formulaArg.getVBox().getChildren().addAll(buttonDesignFormula, buttonLateX, buttonDelete);
+        formulaArg.getVBox().getChildren().addAll(buttonDesignFormula, buttonDelete);
 //        if ((formulaArg.getMathElements().isEmpty()) &&
 //                (formulaArg.getYStart() <= FormulasPositionSet.mFirstConstraintStartYPosition))
             buttonDelete.setDisable(true);
@@ -1192,7 +1193,8 @@ public class MainWindowController {
             rdBtnMax.setDisable(true);
             lblConstraints.setDisable(true);
             formulaArg.setActiveEditing(true);
-            formulaArg.getVBox().getChildren().removeAll(buttonDesignFormula, buttonLateX, buttonDelete);
+//            formulaArg.getVBox().getChildren().removeAll(buttonDesignFormula, buttonLateX, buttonDelete);
+            formulaArg.getVBox().getChildren().removeAll(buttonDesignFormula, buttonDelete);
             formulaArg.getVBox().getChildren().add(buttonStopEditing);
             AnchorPane.setTopAnchor(formulaArg.getVBox(), (double)formulaArg.getAlignment()-15);
             // Disabling all the other buttons
@@ -1228,7 +1230,7 @@ public class MainWindowController {
             if (!formulaArg.getMathElements().isEmpty()) {
                 buttonExportLP.setDisable(false);
                 buttonDesignFormula.setText("Edit Formula");
-                buttonLateX.setText("Edit Latex Formula");
+//                buttonLateX.setText("Edit Latex Formula");
                 if (!formulaArg.isMainFunction())
                     buttonNewConstraint.setDisable(false);
                 buttonDelete.setDisable(false);
@@ -1238,29 +1240,31 @@ public class MainWindowController {
                 drawFormulas();
             }
 
-            formulaArg.getVBox().getChildren().addAll(buttonDesignFormula, buttonLateX, buttonDelete);
-            AnchorPane.setTopAnchor(formulaArg.getVBox(), (double)formulaArg.getYStart());
+//            formulaArg.getVBox().getChildren().addAll(buttonDesignFormula, buttonLateX, buttonDelete);
+            formulaArg.getVBox().getChildren().addAll(buttonDesignFormula, buttonDelete);
+            AnchorPane.setTopAnchor(formulaArg.getVBox(), (double)formulaArg.getYStart()+15.0);
         });
 
-        buttonLateX.setOnMouseClicked(e -> {
-            Dialogs dialogs = new Dialogs();
-            Optional<String> result = dialogs.latexEntryDialog();
-            result.ifPresent(name -> {
-                // TODO: parse latex entry and put into the formula
-//                System.out.println("Latex Entry: " + name);
-            });
-        });
+//        buttonLateX.setOnMouseClicked(e -> {
+//            Dialogs dialogs = new Dialogs();
+//            Optional<String> result = dialogs.latexEntryDialog();
+//            result.ifPresent(name -> {
+//                // TODO: parse latex entry and put into the formula
+////                System.out.println("Latex Entry: " + name);
+//            });
+//        });
 
         buttonDelete.setOnMouseClicked(event -> {
             if (formulaArg.isMainFunction()) {
                 formulaArg.getMathElements().removeAll(formulaArg.getMathElements());
                 buttonDesignFormula.setText("Design Formula");
-                buttonLateX.setText("Latex Formula");
+//                buttonLateX.setText("Latex Formula");
                 drawFormulas();
                 buttonDelete.setDisable(true);
                 return;
             }
-            formulaArg.getVBox().getChildren().removeAll(buttonDelete, buttonDesignFormula, buttonLateX);
+//            formulaArg.getVBox().getChildren().removeAll(buttonDelete, buttonDesignFormula, buttonLateX);
+            formulaArg.getVBox().getChildren().removeAll(buttonDelete, buttonDesignFormula);
             // Repositioning buttons
             for (Formula formula : formulas) {
                 if (formula.getYStart() > formulaArg.getYStart())
@@ -1502,6 +1506,11 @@ public class MainWindowController {
 
     public Coefficient getCoefVarData(char letter) {
         for (Coefficient coefficient : mCoefficients) {
+            if (coefficient.getLetter() == letter) {
+                return coefficient;
+            }
+        }
+        for (Coefficient coefficient : mVariables) {
             if (coefficient.getLetter() == letter) {
                 return coefficient;
             }

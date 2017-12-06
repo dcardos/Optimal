@@ -159,7 +159,7 @@ public class Dialogs {
 
     public boolean callCoefficientDialog(Formula formula, MathElement mathElement,
                                          ObservableList<String> indexStringList, ArrayList<SumIndex> indexList,
-                                         int dimension) {
+                                         int dimension, Coefficient coefficient) {
         Optional<List<String>> result = indexDialog(indexStringList, false, dimension);
         resultFromDialogs = false;
         result.ifPresent(indexes -> {
@@ -169,6 +169,10 @@ public class Dialogs {
         if (resultFromDialogs) {    // it has at least one element
             for (String index : result.get()) {
                 ((Coefficient)mathElement.getExpression()).addIndex(index.charAt(0));
+                if (coefficient != null)
+                    coefficient.addIndex(index.charAt(0));
+                else
+                    System.out.println("Coefficient null, cannot at index to model");
             }
             formula.setLastMathElementModified(mathElement);
             mathElement.updateIcon(formula.getAlignment());
